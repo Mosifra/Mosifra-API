@@ -55,7 +55,11 @@ impl TryFrom<InternshipDto> for Internship {
 
 pub trait TryFromVecInternshipDtoToInternshipVec {
 	// Not sure how to fix this one
-	#[allow(clippy::missing_panics_doc, clippy::result_unit_err)] // WIP
+	#[allow(
+		clippy::missing_panics_doc,
+		clippy::result_unit_err,
+		clippy::missing_errors_doc
+	)] // WIP
 	fn try_from_internshipdto_vec_to_internship_vec(value: Vec<InternshipDto>) -> Result<Self, ()>
 	where
 		Self: std::marker::Sized;
