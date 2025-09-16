@@ -1,24 +1,37 @@
-use rocket::serde::{Serialize, json::Json};
+use lettre::{
+	Message, SmtpTransport, Transport,
+	message::{Mailbox, header::ContentType},
+	transport::smtp::authentication::Credentials,
+};
+
+use rocket::form::Form;
+use university::UniversityDto;
+use utils::{send_2fa_mail, verify_mail};
+
+pub mod class;
+pub mod course_type;
+pub mod internship;
+pub mod role;
+pub mod university;
+pub mod utils;
 
 #[macro_use]
 extern crate rocket;
 
-#[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
-struct Person {
-	name: String,
-	age: u8,
-}
+#[post("/user/create_university", data = "<form>")]
+#[allow(clippy::needless_pass_by_value)]
+fn create_university(form: Form<UniversityDto>) {
+	println!("{form:#?}");
+	if verify_mail(&form.mail) {
+		println!("correct mail");
+	} else {
+		println!("incorrect mail");
+	}
 
-#[get("/hello/<name>/<age>")]
-fn hello(name: &str, age: u8) -> Json<Person> {
-	Json(Person {
-		name: name.to_string(),
-		age,
-	})
+	println!("code needs to be {}", send_2fa_mail());
 }
 
 #[launch]
 fn rocket() -> _ {
-	rocket::build().mount("/", routes![hello])
+	rocket::build().mount("/", routes![create_university])
 }

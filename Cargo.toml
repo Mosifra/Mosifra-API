@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+lettre = "0.11.18"
+rand = "0.9.2"
+regex = "1.11.2"
 rocket = { version = "0.5.1", features = ["json", "secrets"] }
+uuid = { version = "1.18.1", features = ["serde", "v4"] }
