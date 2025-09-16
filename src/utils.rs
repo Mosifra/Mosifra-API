@@ -7,6 +7,7 @@ use rand::seq::{IndexedRandom, SliceRandom};
 use regex::Regex;
 
 #[must_use]
+#[allow(clippy::missing_panics_doc, clippy::result_unit_err)] // WIP
 pub fn verify_mail(mail: &str) -> bool {
 	// Should never crash
 	#[allow(clippy::unwrap_used)]
@@ -17,6 +18,7 @@ pub fn verify_mail(mail: &str) -> bool {
 	regex.is_match(mail)
 }
 
+#[allow(clippy::missing_panics_doc, clippy::result_unit_err)] // WIP
 pub fn send_2fa_mail() -> Result<String, ()> {
 	let mut code = vec![];
 

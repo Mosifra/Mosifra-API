@@ -40,7 +40,7 @@ impl TryFrom<ClassDto> for Class {
 
 pub trait TryFromVecClassDtoToClassVec {
 	// Not sure how to fix this one
-	#[allow(clippy::result_unit_err)]
+	#[allow(clippy::missing_panics_doc, clippy::result_unit_err)] // WIP
 	fn try_from_classdto_vec_to_class_vec(value: Vec<ClassDto>) -> Result<Self, ()>
 	where
 		Self: std::marker::Sized;
