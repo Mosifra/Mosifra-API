@@ -3,9 +3,9 @@ use std::str::FromStr;
 use rocket::time::Date;
 use uuid::Uuid;
 
-use crate::course_type::CourseType;
-
 use anyhow::Result;
+
+use super::course_type::CourseType;
 
 #[derive(Debug)]
 #[allow(dead_code)] // WIP

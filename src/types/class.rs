@@ -3,7 +3,7 @@ use std::str::FromStr;
 use rocket::time::Date;
 use uuid::Uuid;
 
-use crate::course_type::CourseType;
+use super::course_type::CourseType;
 
 // For now
 #[allow(dead_code)]

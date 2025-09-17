@@ -27,14 +27,14 @@ pub fn verify_mail(mail: &str) -> bool {
 	clippy::result_unit_err,
 	clippy::missing_errors_doc
 )] // WIP
-pub fn send_2fa_mail() -> Result<String, ()> {
+pub fn send_2fa_mail(to: String) -> Result<String, ()> {
 	let mut code = vec![];
 
 	let mut rng = rand::rng();
 	for _ in 1..=6 {
 		let mut nums: Vec<i32> = (0..=9).collect();
 		nums.shuffle(&mut rng);
-		#[allow(clippy::unwrap_used)] //WIP
+		#[allow(clippy::unwrap_used)] // WIP
 		code.push(nums.choose(&mut rng).unwrap().to_string());
 	}
 
@@ -42,14 +42,8 @@ pub fn send_2fa_mail() -> Result<String, ()> {
 
 	#[allow(clippy::unwrap_used)] //WIP
 	let email = Message::builder()
-		.from(Mailbox::new(
-			Some("mosifratest".to_owned()),
-			"mosifratest@gmail.com".parse().unwrap(),
-		))
-		.to(Mailbox::new(
-			Some("nissya".to_owned()),
-			"nissya@proton.me".parse().unwrap(),
-		))
+		.from(Mailbox::new(None, "mosifratest@gmail.com".parse().unwrap()))
+		.to(Mailbox::new(None, to.parse().unwrap()))
 		.header(ContentType::TEXT_PLAIN)
 		.body(code.clone())
 		.unwrap();

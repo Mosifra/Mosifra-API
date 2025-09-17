@@ -1,7 +1,7 @@
 use passwords::PasswordGenerator;
 use uuid::Uuid;
 
-use crate::{
+use super::{
 	class::{Class, ClassDto, TryFromVecClassDtoToClassVec},
 	internship::{Internship, InternshipDto, TryFromVecInternshipDtoToInternshipVec},
 };
