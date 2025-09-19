@@ -1,3 +1,6 @@
+use std::env;
+
+use rocket::Config;
 use routes::user;
 
 pub mod routes;
@@ -9,5 +12,15 @@ extern crate rocket;
 
 #[launch]
 fn rocket() -> _ {
-	rocket::build().mount("/", routes![user::create_university])
+	dotenvy::dotenv().expect("Error while loading .env");
+
+	let rocket_secret = env::var("ROCKET_SECRET")
+		.ok()
+		.expect("SECRET is to be specified in .env");
+
+	let rocket = rocket::custom(Config::from(
+		Config::figment().merge(("secret_key", rocket_secret)),
+	));
+
+	rocket.mount("/", routes![user::create_university])
 }
