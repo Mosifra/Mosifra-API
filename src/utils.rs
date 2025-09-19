@@ -27,7 +27,7 @@ pub fn verify_mail(mail: &str) -> bool {
 	clippy::result_unit_err,
 	clippy::missing_errors_doc
 )] // WIP
-pub fn send_2fa_mail(to: String) -> Result<String, ()> {
+pub fn send_2fa_mail(to: &str) -> Result<String, ()> {
 	let mut code = vec![];
 
 	let mut rng = rand::rng();

@@ -8,9 +8,10 @@ use crate::{
 
 #[post("/user/create_university", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::missing_errors_doc)]
 pub async fn create_university(form: Form<UniversityDto>) -> Result<String, String> {
 	let university =
-		University::try_from(form.into_inner()).map_err(|_| "Conversion échouée".to_string())?;
+		University::try_from(form.into_inner()).map_err(|()| "Conversion échouée".to_string())?;
 	println!("{university:#?}");
 
 	if verify_mail(&university.mail) {
@@ -19,8 +20,8 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
 		println!("incorrect mail");
 	}
 
-	let code = send_2fa_mail(university.mail.clone())
-		.map_err(|()| "Échec de l’envoi du mail".to_string())?;
+	let code =
+		send_2fa_mail(&university.mail).map_err(|()| "Échec de l’envoi du mail".to_string())?;
 	println!("code needs to be {code}");
 
 	let database_url = std::env::var("DATABASE_URL") //Défini dans le docker-compose si Victor a bien fait son taff
