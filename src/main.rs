@@ -21,8 +21,8 @@ fn rocket() -> _ {
 	}
 
 	let rocket_secret = env::var("ROCKET_SECRET").ok().map_or_else(
-		|e| {
-			eprintln!("Secret must be in .env : {e}");
+		|| {
+			eprintln!("Secret must be in .env");
 			exit(1)
 		},
 		|secret| secret,
