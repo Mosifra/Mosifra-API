@@ -12,11 +12,17 @@ extern crate rocket;
 
 #[launch]
 fn rocket() -> _ {
-	dotenvy::dotenv().expect("Error while loading .env");
+	match dotenvy::dotenv() {
+		Ok(_) => (),
+		Err(e) => {
+			eprintln!("Error while loading .env : {e}");
+			exit(1)
+		}
+	}
 
 	let rocket_secret = env::var("ROCKET_SECRET").ok().map_or_else(
-		|| {
-			eprintln!("Secret must be in .env");
+		|e| {
+			eprintln!("Secret must be in .env : {e}");
 			exit(1)
 		},
 		|secret| secret,
