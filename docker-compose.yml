@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: dockerfile_postgres
+    container_name: sae_stage_db
+    environment:
+      POSTGRES_DB: sae_db
+      POSTGRES_USER: sae_user
+      POSTGRES_PASSWORD: sae_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  api:
+    build: .
+    container_name: mosifra_api
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://sae_user:sae_password@db:5432/sae_db
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
+
