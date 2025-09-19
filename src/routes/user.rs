@@ -7,6 +7,7 @@ use crate::{
 
 #[post("/user/create_university", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::result_unit_err)]
 pub fn create_university(form: Form<UniversityDto>) -> Result<(), ()> {
 	let university = University::try_from(form.into_inner())?;
 	println!("{university:#?}");
