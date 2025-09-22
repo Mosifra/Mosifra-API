@@ -1,82 +1,82 @@
 -- Table étudiant
-CREATE TABLE etudiant (
+CREATE TABLE student (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    prenom VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
-    mot_de_passe VARCHAR(255) NOT NULL,
-    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    deuxfa_secret VARCHAR(255) NULL
+    password VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) UNIQUE NOT NULL,
+    twofa VARCHAR(255) NULL
 );
 
 -- Table type de formation
-CREATE TABLE type_formation (
+CREATE TABLE course_type (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL
 );
 
 -- Table promo
-CREATE TABLE promo (
+CREATE TABLE class (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    type_formation INT REFERENCES type_formation(id) ON DELETE RESTRICT,
-    date_debut DATE,
-    date_fin DATE,
-    taille_min INT,
-    taille_max INT
+    name VARCHAR(100) NOT NULL,
+    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
+    start_date DATE,
+    end_date DATE,
+    min_size INT,
+    max_size INT
 );
 
 -- Relation n-n promo <-> étudiant
-CREATE TABLE promo_etudiant (
-    promo_id INT REFERENCES promo(id) ON DELETE RESTRICT,
-    etudiant_id INT REFERENCES etudiant(id) ON DELETE RESTRICT,
-    PRIMARY KEY (promo_id, etudiant_id)
+CREATE TABLE student_class (
+    class_id INT REFERENCES class(id) ON DELETE RESTRICT,
+    student_id INT REFERENCES student(id) ON DELETE RESTRICT,
+    PRIMARY KEY (class_id, student_id)
 );
 
 -- Table université
-CREATE TABLE universite (
+CREATE TABLE university (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     login VARCHAR(100) NOT NULL,
-    mot_de_passe VARCHAR(255) NOT NULL,
-    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    deuxfa_secret VARCHAR(255) NULL
+    password VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) UNIQUE NOT NULL,
+    twofa VARCHAR(255) NULL
 );
 
 -- Relation université <-> promo
-CREATE TABLE universite_promo (
-    universite_id INT REFERENCES universite(id) ON DELETE RESTRICT,
-    promo_id INT REFERENCES promo(id) ON DELETE RESTRICT,
-    PRIMARY KEY (universite_id, promo_id)
+CREATE TABLE university_class (
+    university_id INT REFERENCES university(id) ON DELETE RESTRICT,
+    class_id INT REFERENCES class(id) ON DELETE RESTRICT,
+    PRIMARY KEY (university_id, class_id)
 );
 
 -- Table entreprise
-CREATE TABLE entreprise (
+CREATE TABLE company (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
-    mot_de_passe VARCHAR(255) NOT NULL,
-    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    deuxfa_secret VARCHAR(255) NULL
+    password VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) UNIQUE NOT NULL,
+    twofa VARCHAR(255) NULL
 );
 
 -- Table stage
-CREATE TABLE stage (
+CREATE TABLE internship (
     id SERIAL PRIMARY KEY,
-    type_formation INT REFERENCES type_formation(id) ON DELETE RESTRICT,
-    entreprise_id INT REFERENCES entreprise(id) ON DELETE SET NULL,
-    date_debut DATE,
-    date_fin DATE,
-    duree_min_stage INT,
-    duree_max_stage INT,
-    intitule VARCHAR(255),
+    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
+    company_id INT REFERENCES company(id) ON DELETE SET NULL,
+    start_date DATE,
+    end_date DATE,
+    min_internship_length INT,
+    max_internship_length INT,
+    title VARCHAR(255),
     description TEXT,
-    endroit VARCHAR(255)
+    place VARCHAR(255)
 );
 
 -- Relation université <-> stage
-CREATE TABLE universite_stage (
-    universite_id INT REFERENCES universite(id) ON DELETE RESTRICT,
-    stage_id INT REFERENCES stage(id) ON DELETE RESTRICT,
-    PRIMARY KEY (universite_id, stage_id)
+CREATE TABLE university_internship (
+    university_id INT REFERENCES university(id) ON DELETE RESTRICT,
+    internship_id INT REFERENCES internship(id) ON DELETE RESTRICT,
+    PRIMARY KEY (university_id, internship_id)
 );

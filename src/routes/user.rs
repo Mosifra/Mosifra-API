@@ -14,8 +14,8 @@ use crate::{
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_university(form: Form<UniversityDto>) -> Result<String, String> {
-	let university =
-		University::try_from(form.into_inner()).map_err(|()| "Conversion échouée".to_string())?;
+	let university = University::try_from(form.into_inner())
+		.map_err(|()| "Error while converting UniversityDto".to_string())?; // Not ideal but will do
 	println!("{university:#?}");
 
 	if verify_mail(&university.mail) {
@@ -24,8 +24,7 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
 		println!("incorrect mail");
 	}
 
-	let code =
-		send_2fa_mail(&university.mail).map_err(|()| "Échec de l’envoi du mail".to_string())?;
+	let code = send_2fa_mail(&university.mail).map_err(|()| "Failed to send mail".to_string())?;
 	println!("code needs to be {code}");
 
 	insert_universite(university, code).await
@@ -35,8 +34,7 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_student(form: Form<StudentDto>) -> Result<String, String> {
-	let student =
-		Student::try_from(form.into_inner()).map_err(|()| "Conversion échouée".to_string())?;
+	let student = Student::try_from(form.into_inner())?;
 	println!("{student:#?}");
 
 	if verify_mail(&student.mail) {
@@ -45,7 +43,7 @@ pub async fn create_student(form: Form<StudentDto>) -> Result<String, String> {
 		println!("incorrect mail");
 	}
 
-	let code = send_2fa_mail(&student.mail).map_err(|()| "Échec de l’envoi du mail".to_string())?;
+	let code = send_2fa_mail(&student.mail).map_err(|()| "Failed to send mail".to_string())?;
 	println!("code needs to be {code}");
 
 	insert_student(student, code).await
@@ -55,8 +53,7 @@ pub async fn create_student(form: Form<StudentDto>) -> Result<String, String> {
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_company(form: Form<CompanyDto>) -> Result<String, String> {
-	let company =
-		Company::try_from(form.into_inner()).map_err(|()| "Conversion échouée".to_string())?;
+	let company = Company::try_from(form.into_inner())?;
 	println!("{company:#?}");
 
 	if verify_mail(&company.mail) {
@@ -65,7 +62,7 @@ pub async fn create_company(form: Form<CompanyDto>) -> Result<String, String> {
 		println!("incorrect mail");
 	}
 
-	let code = send_2fa_mail(&company.mail).map_err(|()| "Échec de l’envoi du mail".to_string())?;
+	let code = send_2fa_mail(&company.mail).map_err(|()| "Failed to send mail".to_string())?;
 	println!("code needs to be {code}");
 
 	insert_company(company, code).await

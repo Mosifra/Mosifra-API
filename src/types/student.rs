@@ -1,5 +1,6 @@
-use passwords::PasswordGenerator;
 use uuid::Uuid;
+
+use crate::utils::generate_password;
 
 #[derive(Debug)]
 pub struct Student {
@@ -20,20 +21,10 @@ pub struct StudentDto {
 }
 
 impl TryFrom<StudentDto> for Student {
-	type Error = ();
+	type Error = String;
 
 	fn try_from(value: StudentDto) -> Result<Self, Self::Error> {
-		let password = PasswordGenerator::new()
-			.length(8)
-			.numbers(true)
-			.lowercase_letters(true)
-			.uppercase_letters(true)
-			.symbols(true)
-			.spaces(false)
-			.exclude_similar_characters(true)
-			.strict(true)
-			.generate_one()
-			.unwrap();
+		let password = generate_password()?;
 
 		Ok(Self {
 			id: Uuid::new_v4().to_string(),

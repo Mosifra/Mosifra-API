@@ -1,5 +1,6 @@
-use passwords::PasswordGenerator;
 use uuid::Uuid;
+
+use crate::utils::generate_password;
 
 use super::{
 	class::{Class, ClassDto, TryFromVecClassDtoToClassVec},
@@ -34,18 +35,7 @@ impl TryFrom<UniversityDto> for University {
 		let intership_list =
 			Vec::<Internship>::try_from_internshipdto_vec_to_internship_vec(value.intership_list)?;
 
-		#[allow(clippy::unwrap_used)]
-		let password = PasswordGenerator::new()
-			.length(8)
-			.numbers(true)
-			.lowercase_letters(true)
-			.uppercase_letters(true)
-			.symbols(true)
-			.spaces(false)
-			.exclude_similar_characters(true)
-			.strict(true)
-			.generate_one()
-			.unwrap();
+		let password = generate_password().map_err(|_| ())?;
 
 		Ok(Self {
 			id: Uuid::new_v4().to_string(),
