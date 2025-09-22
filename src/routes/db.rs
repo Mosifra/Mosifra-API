@@ -1,3 +1,5 @@
+use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
+use std::{env, process::exit};
 use tokio_postgres::NoTls;
 
 pub async fn insert_universite(
@@ -19,6 +21,17 @@ pub async fn insert_universite(
         }
     });
 
+    let bytes_password = password.into_bytes();
+    let salt = env::var("SALT").ok().map_or_else(
+        || {
+            eprintln!("Secret must be in .env");
+            exit(1)
+        },
+        |secret| secret,
+    );
+    let argon2 = Argon2::default();
+    let password_hash = argon2.hash_password(bytes_password, SaltString::from_b64(&salt).unwrap());
+
     let row = client
         .query_one(
             "INSERT INTO universite (nom, adresse_mail, login, deuxfa_secret, mot_de_passe) VALUES ($1, $2, $3, $4, $5) RETURNING id;",
@@ -31,6 +44,6 @@ pub async fn insert_universite(
     println!("Université créée avec id = {new_id}");
 
     Ok(format!(
-        "Valeurs {nom}, {mail}, {login}, {deuxfa} insérées avec id {new_id}"
+        "Valeurs {nom}, {mail}, {login}, {deuxfa}, {password} (mot de passe encodé) insérées avec id {new_id}"
     ))
 }
