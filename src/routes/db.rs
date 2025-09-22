@@ -20,7 +20,7 @@ pub async fn insert_universite(
 
     let row = client
         .query_one(
-            "INSERT INTO universite (nom), (adresse_mail), (login), (deuxfa_secret) VALUES ($1), ($2), ($3), ($4) RETURNING id",
+            "INSERT INTO universite (nom, adresse_mail, login, deuxfa_secret) VALUES ($1, $2, $3, $4) RETURNING id;",
             &[&nom, &mail, &login, &deuxfa],
         ) //Table université
         .await
