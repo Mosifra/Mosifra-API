@@ -30,7 +30,6 @@ pub async fn insert_universite(
     println!("Université créée avec id = {new_id}");
 
     Ok(format!(
-        "Valeurs {}, {}, {}, {} insérées avec id {}",
-        nom, mail, login, deuxfa, new_id
+        "Valeurs {nom}, {mail}, {login}, {deuxfa} insérées avec id {new_id}"
     ))
 }
