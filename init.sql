@@ -1,25 +1,13 @@
--- Table des types d'utilisateurs
-CREATE TABLE type_users (
-    id SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL
-);
-
--- Table des utilisateurs
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,  -- clé primaire auto-incrémentée
-    login VARCHAR(100) UNIQUE NOT NULL,
-    mot_de_passe VARCHAR(255) NOT NULL,
-    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
-    deuxfa_secret VARCHAR(255) NULL  -- pour 2FA, optionnel
-);
-
 -- Table étudiant
 CREATE TABLE etudiant (
     id SERIAL PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
-    user_id INT REFERENCES users(id) ON DELETE RESTRICT
+    login VARCHAR(100) UNIQUE NOT NULL,
+    mot_de_passe VARCHAR(255) NOT NULL,
+    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
+    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
+    deuxfa_secret VARCHAR(255) NULL
 );
 
 -- Table type de formation
@@ -50,6 +38,11 @@ CREATE TABLE promo_etudiant (
 CREATE TABLE universite (
     id SERIAL PRIMARY KEY,
     nom VARCHAR(255) NOT NULL
+    login VARCHAR(100) UNIQUE NOT NULL,
+    mot_de_passe VARCHAR(255) NOT NULL,
+    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
+    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
+    deuxfa_secret VARCHAR(255) NULL
 );
 
 -- Relation université <-> promo
@@ -63,6 +56,11 @@ CREATE TABLE universite_promo (
 CREATE TABLE entreprise (
     id SERIAL PRIMARY KEY,
     nom VARCHAR(255) NOT NULL
+    login VARCHAR(100) UNIQUE NOT NULL,
+    mot_de_passe VARCHAR(255) NOT NULL,
+    adresse_mail VARCHAR(255) UNIQUE NOT NULL,
+    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
+    deuxfa_secret VARCHAR(255) NULL
 );
 
 -- Table stage
