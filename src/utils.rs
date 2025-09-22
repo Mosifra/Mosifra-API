@@ -79,6 +79,7 @@ pub fn verify_password(pwd_to_check: &str, stored_hash: &str) -> Result<bool, St
 		.map_err(|_| "Mot de passe incorrect".to_string())
 }
 
+#[allow(clippy::missing_errors_doc)]
 pub fn hash_password(password: &str) -> Result<String, String> {
 	let bytes_password = password.as_bytes();
 	let salt = SaltString::generate(&mut OsRng);
