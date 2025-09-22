@@ -6,7 +6,6 @@ CREATE TABLE etudiant (
     login VARCHAR(100) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
     deuxfa_secret VARCHAR(255) NULL
 );
 
@@ -37,11 +36,10 @@ CREATE TABLE promo_etudiant (
 -- Table université
 CREATE TABLE universite (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL
+    nom VARCHAR(255) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
     deuxfa_secret VARCHAR(255) NULL
 );
 
@@ -55,11 +53,10 @@ CREATE TABLE universite_promo (
 -- Table entreprise
 CREATE TABLE entreprise (
     id SERIAL PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL
+    nom VARCHAR(255) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     adresse_mail VARCHAR(255) UNIQUE NOT NULL,
-    type INT REFERENCES type_users(id) ON DELETE RESTRICT,
     deuxfa_secret VARCHAR(255) NULL
 );
 
