@@ -1,7 +1,7 @@
 use std::{env, process::exit};
 
 use rocket::Config;
-use routes::user;
+use routes::{login, user};
 
 pub mod db;
 pub mod routes;
@@ -33,5 +33,13 @@ fn rocket() -> _ {
 		Config::figment().merge(("secret_key", rocket_secret)),
 	));
 
-	rocket.mount("/", routes![user::create_university])
+	rocket.mount(
+		"/",
+		routes![
+			user::create_university,
+			user::create_student,
+			user::create_company,
+			login::login_university
+		],
+	)
 }

@@ -1,4 +1,8 @@
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
+use argon2::{
+	Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+	password_hash::{SaltString, rand_core::OsRng},
+};
+
 use lettre::{
 	Message, SmtpTransport, Transport,
 	message::{Mailbox, header::ContentType},
@@ -73,4 +77,17 @@ pub fn verify_password(pwd_to_check: &str, stored_hash: &str) -> Result<bool, St
 		.verify_password(pwd_to_check.as_bytes(), &parsed_hash)
 		.map(|()| true)
 		.map_err(|_| "Mot de passe incorrect".to_string())
+}
+
+pub fn hash_password(password: &str) -> Result<String, String> {
+	let bytes_password = password.as_bytes();
+	let salt = SaltString::generate(&mut OsRng);
+	let argon2 = Argon2::default();
+
+	let password_hash = argon2
+		.hash_password(bytes_password, &salt)
+		.map_err(|e| format!("Error while tryinng to hash password {e}"))?
+		.to_string();
+
+	Ok(password_hash)
 }
