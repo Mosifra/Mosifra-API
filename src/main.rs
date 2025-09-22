@@ -3,6 +3,7 @@ use std::{env, process::exit};
 use rocket::Config;
 use routes::user;
 
+pub mod db;
 pub mod routes;
 pub mod types;
 pub mod utils;
