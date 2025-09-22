@@ -2,7 +2,6 @@ use argon2::{
     Argon2, PasswordHasher,
     password_hash::{SaltString, rand_core::OsRng},
 };
-use std::{env, process::exit};
 use tokio_postgres::NoTls;
 
 pub async fn insert_universite(

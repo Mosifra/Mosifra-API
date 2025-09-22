@@ -37,7 +37,7 @@ CREATE TABLE promo_etudiant (
 CREATE TABLE universite (
     id SERIAL PRIMARY KEY,
     nom VARCHAR(255) NOT NULL,
-    login VARCHAR(100) UNIQUE NOT NULL,
+    login VARCHAR(100) NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     adresse_mail VARCHAR(255) UNIQUE NOT NULL,
     deuxfa_secret VARCHAR(255) NULL
