@@ -94,6 +94,7 @@ pub fn hash_password(password: &str) -> Result<String, String> {
 	Ok(password_hash)
 }
 
+#[allow(clippy::missing_errors_doc)]
 pub fn generate_password() -> Result<String, &'static str> {
 	PasswordGenerator::new()
 		.length(8)
