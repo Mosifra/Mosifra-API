@@ -5,6 +5,7 @@ pub async fn insert_universite(
     mail: String,
     login: String,
     deuxfa: String,
+    password: String,
 ) -> Result<String, String> {
     let database_url =
         std::env::var("DATABASE_URL").map_err(|_| "DATABASE_URL manquant".to_string())?;
@@ -20,8 +21,8 @@ pub async fn insert_universite(
 
     let row = client
         .query_one(
-            "INSERT INTO universite (nom, adresse_mail, login, deuxfa_secret) VALUES ($1, $2, $3, $4) RETURNING id;",
-            &[&nom, &mail, &login, &deuxfa],
+            "INSERT INTO universite (nom, adresse_mail, login, deuxfa_secret, mot_de_passe) VALUES ($1, $2, $3, $4, $5) RETURNING id;",
+            &[&nom, &mail, &login, &deuxfa, &password],
         ) //Table université
         .await
         .map_err(|e| format!("Erreur INSERT: {e}"))?;

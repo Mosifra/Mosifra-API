@@ -24,5 +24,12 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
         send_2fa_mail(&university.mail).map_err(|()| "Échec de l’envoi du mail".to_string())?;
     println!("code needs to be {code}");
 
-    insert_universite(university.name, university.mail, university.login, code).await
+    insert_universite(
+        university.name,
+        university.mail,
+        university.login,
+        code,
+        university.password,
+    )
+    .await
 }
