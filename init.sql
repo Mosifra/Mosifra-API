@@ -63,7 +63,7 @@ CREATE TABLE company (
 -- Table stage
 CREATE TABLE internship (
     id VARCHAR(128) PRIMARY KEY,
-    course_type VARCHAR(128) REFERENCES course_type(id) ON DELETE RESTRICT,
+    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
     company_id VARCHAR(128) REFERENCES company(id) ON DELETE SET NULL,
     start_date DATE,
     end_date DATE,
