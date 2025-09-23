@@ -4,8 +4,11 @@ use crate::{
     db::{
         get_company_password_from_mail, get_student_password_from_mail,
         get_university_password_from_mail,
+        insert_2fa_for_company,
+        insert_2fa_for_university,
+        insert_2fa_for_student
     },
-    utils::{verify_mail, verify_password},
+    utils::{send_2fa_mail, verify_mail, verify_password},
 };
 
 #[derive(Debug, FromForm)]
@@ -27,7 +30,8 @@ pub async fn login_university(form: Form<Login>) -> Result<String, String> {
     let correct_password = get_university_password_from_mail(&login.mail).await?;
 
     if verify_password(&login.password, &correct_password)? {
-        Ok("Logged in".to_string())
+        let code = send_2fa_mail(&login.mail).await?;
+        Ok("Sent mail for 2fa".to_string())
     } else {
         Err("Invalid Password".to_string())
     }
@@ -46,6 +50,7 @@ pub async fn login_company(form: Form<Login>) -> Result<String, String> {
     let correct_password = get_company_password_from_mail(&login.mail).await?;
 
     if verify_password(&login.password, &correct_password)? {
+        let code = send_2fa_mail(&login.mail).await?;
         Ok("Logged in".to_string())
     } else {
         Err("Invalid Password".to_string())
@@ -65,6 +70,8 @@ pub async fn login_student(form: Form<Login>) -> Result<String, String> {
     let correct_password = get_student_password_from_mail(&login.mail).await?;
 
     if verify_password(&login.password, &correct_password)? {
+        let code = send_2fa_mail(&login.mail).await?;
+        //insert_2fa_for_student(id, twofa)     Victor enculé fix l'id
         Ok("Logged in".to_string())
     } else {
         Err("Invalid Password".to_string())

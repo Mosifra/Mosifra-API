@@ -1,13 +1,13 @@
 use rocket::form::Form;
 
 use crate::{
-	db::{insert_company, insert_student, insert_university},
-	types::{
-		company::{Company, CompanyDto},
-		student::{Student, StudentDto},
-		university::{University, UniversityDto},
-	},
-	utils::{send_2fa_mail, verify_mail},
+    db::{insert_company, insert_student, insert_university},
+    types::{
+        company::{Company, CompanyDto},
+        student::{Student, StudentDto},
+        university::{University, UniversityDto},
+    },
+    utils::verify_mail,
 };
 
 #[post("/user/create_university", data = "<form>")]
@@ -24,10 +24,7 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
         println!("incorrect mail");
     }
 
-    let code = send_2fa_mail(&university.mail).map_err(|()| "Failed to send mail".to_string())?;
-    println!("code needs to be {code}");
-
-	insert_university(university, code).await
+    insert_university(university).await
 }
 
 #[post("/user/create_student", data = "<form>")]
@@ -43,10 +40,7 @@ pub async fn create_student(form: Form<StudentDto>) -> Result<String, String> {
         println!("incorrect mail");
     }
 
-    let code = send_2fa_mail(&student.mail).map_err(|()| "Failed to send mail".to_string())?;
-    println!("code needs to be {code}");
-
-    insert_student(student, code).await
+    insert_student(student).await
 }
 
 #[post("/user/create_company", data = "<form>")]
@@ -62,8 +56,5 @@ pub async fn create_company(form: Form<CompanyDto>) -> Result<String, String> {
         println!("incorrect mail");
     }
 
-    let code = send_2fa_mail(&company.mail).map_err(|()| "Failed to send mail".to_string())?;
-    println!("code needs to be {code}");
-
-    insert_company(company, code).await
+    insert_company(company).await
 }
