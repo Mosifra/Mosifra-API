@@ -21,14 +21,14 @@ async fn setup_database() -> Result<Client, String> {
 }
 
 #[allow(clippy::missing_errors_doc)]
-pub async fn insert_university(universite: University, twofa: String) -> Result<String, String> {
-    let client = setup_database().await?;
-    let password_hash = hash_password(&universite.password)?;
+pub async fn insert_university(university: University, twofa: String) -> Result<String, String> {
+	let client = setup_database().await?;
+	let password_hash = hash_password(&university.password)?;
 
     let row = client
         .query_one(
             "INSERT INTO university (name, mail, login, twofa, password) VALUES ($1, $2, $3, $4, $5) RETURNING id;",
-            &[&universite.name, &universite.mail, &universite.login, &twofa, &password_hash],
+            &[&university.name, &university.mail, &university.login, &twofa, &password_hash],
         )
         .await
         .map_err(|e| format!("INSERT error: {e}"))?;
@@ -36,10 +36,10 @@ pub async fn insert_university(universite: University, twofa: String) -> Result<
     let new_id: i32 = row.get(0);
     println!("University created with id = {new_id}");
 
-    Ok(format!(
-        "Values {}, {}, {}, {twofa}, {password_hash} (encoded password) inserted with id {new_id}",
-        universite.name, universite.mail, universite.login
-    ))
+	Ok(format!(
+		"Values {}, {}, {}, {twofa}, {password_hash} (encoded password) inserted with id {new_id}",
+		university.name, university.mail, university.login
+	))
 }
 
 #[allow(clippy::missing_errors_doc)]
