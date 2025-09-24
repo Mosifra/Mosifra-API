@@ -1,6 +1,7 @@
 use std::{env, process::exit};
 
-use rocket::Config;
+use rocket::{Config, http::Method};
+use rocket_cors::{AllowedOrigins, CorsOptions};
 use routes::{login, user};
 
 pub mod routes;
@@ -33,15 +34,27 @@ fn rocket() -> _ {
 		Config::figment().merge(("secret_key", rocket_secret)),
 	));
 
-	rocket.mount(
-		"/",
-		routes![
-			user::create_university,
-			user::create_student,
-			user::create_company,
-			login::login_university,
-			login::login_student,
-			login::login_company
-		],
-	)
+	let cors = CorsOptions::default()
+		.allowed_origins(AllowedOrigins::all())
+		.allowed_methods(
+			vec![Method::Get, Method::Post, Method::Patch]
+				.into_iter()
+				.map(From::from)
+				.collect(),
+		)
+		.allow_credentials(true);
+
+	rocket
+		.mount(
+			"/",
+			routes![
+				user::create_university,
+				user::create_student,
+				user::create_company,
+				login::login_university,
+				login::login_student,
+				login::login_company
+			],
+		)
+		.attach(cors.to_cors().unwrap())
 }
