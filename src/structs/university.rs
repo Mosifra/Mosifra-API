@@ -17,7 +17,6 @@ pub struct University {
 	pub password: String,
 	pub name: String,
 	pub mail: String,
-	pub twofa: String,
 	pub class_list: Vec<Class>,
 	pub intership_list: Vec<Internship>,
 }
@@ -49,7 +48,6 @@ impl TryFrom<UniversityDto> for University {
 			mail: value.mail,
 			class_list,
 			intership_list,
-			twofa: String::new(),
 		})
 	}
 }
@@ -87,33 +85,6 @@ impl Db for University {
 		Ok(hashed_password)
 	}
 
-	async fn is_2fa_null(&self) -> Result<bool, String> {
-		let client = Self::setup_database().await?;
-
-		let row = client
-			.query_one("SELECT twofa FROM university WHERE id=$1;", &[&self.id])
-			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
-
-		let row_result: String = row.get(0);
-		if row_result == "NULL" {
-			Ok(true)
-		} else {
-			Ok(false)
-		}
-	}
-
-	async fn insert_2fa(id: &str, twofa: &str) -> Result<String, String> {
-		let client = Self::setup_database().await?;
-
-		let _ = client
-			.query_one("UPDATE university SET twofa=$1 WHERE id=$2", &[&twofa, &id])
-			.await
-			.map_err(|e| format!("INSERT error: {e}"))?;
-
-		Ok("Inséré".to_string())
-	}
-
 	async fn get_id_from_mail(mail: &str) -> Result<String, String> {
 		let client = Self::setup_database().await?;
 
@@ -134,7 +105,7 @@ impl University {
 
 		let row = client
 			.query_one(
-				"SELECT name, login, password, mail, twofa FROM university WHERE id=$1;",
+				"SELECT name, login, password, mail FROM university WHERE id=$1;",
 				&[&id],
 			)
 			.await
@@ -144,7 +115,6 @@ impl University {
 		let login: String = row.get(1);
 		let password: String = row.get(2);
 		let mail: String = row.get(3);
-		let twofa: String = row.get(4);
 
 		Ok(Self {
 			id: id.to_string(),
@@ -154,7 +124,6 @@ impl University {
 			mail,
 			class_list: Vec::new(),     //WIP
 			intership_list: Vec::new(), //WIP
-			twofa,
 		})
 	}
 }

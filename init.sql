@@ -5,8 +5,7 @@ CREATE TABLE student (
     last_name VARCHAR(100) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    mail VARCHAR(255) UNIQUE NOT NULL,
-    twofa VARCHAR(255) NULL
+    mail VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Table type de formation
@@ -39,8 +38,7 @@ CREATE TABLE university (
     name VARCHAR(255) NOT NULL,
     login VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    mail VARCHAR(255) UNIQUE NOT NULL,
-    twofa VARCHAR(255) NULL
+    mail VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Relation université <-> promo
@@ -56,8 +54,7 @@ CREATE TABLE company (
     name VARCHAR(255) NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    mail VARCHAR(255) UNIQUE NOT NULL,
-    twofa VARCHAR(255) NULL
+    mail VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Table stage

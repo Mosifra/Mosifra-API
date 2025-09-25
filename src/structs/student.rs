@@ -76,14 +76,6 @@ impl Db for Student {
 		Ok(hashed_password)
 	}
 
-	async fn is_2fa_null(&self) -> Result<bool, String> {
-		unimplemented!()
-	}
-
-	async fn insert_2fa(_id: &str, _twofa: &str) -> Result<String, String> {
-		unimplemented!()
-	}
-
 	async fn get_id_from_mail(_mail: &str) -> Result<String, String> {
 		unimplemented!()
 	}

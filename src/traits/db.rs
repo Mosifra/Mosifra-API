@@ -22,9 +22,5 @@ pub trait Db {
 
 	async fn get_password_from_mail(mail: &str) -> Result<String, String>;
 
-	async fn is_2fa_null(&self) -> Result<bool, String>;
-
-	async fn insert_2fa(id: &str, twofa: &str) -> Result<String, String>;
-
 	async fn get_id_from_mail(mail: &str) -> Result<String, String>;
 }
