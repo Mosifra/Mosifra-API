@@ -53,3 +53,13 @@ pub fn invalidate_transactionid(twofa: &Twofa) -> Result<(), String> {
 
 	Ok(())
 }
+
+pub fn get_user_id_from_twofa(twofa: &Twofa) -> Result<String, String> {
+	let mut con = setup_redis()?;
+
+	let val = con.get(format!("login:{}", twofa.transaction_id)).unwrap().unwrap();
+
+	let check: LoginTransaction = serde_json::from_str(&val).unwrap();
+
+	Ok(check.user_id)
+}

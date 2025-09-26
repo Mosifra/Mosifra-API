@@ -1,22 +1,28 @@
 use rocket::form::Form;
+use uuid::Uuid;
 
 use crate::{
-	redis,
+	redis::{self, get_user_id_from_twofa},
 	structs::{company::Company, student::Student, university::University},
 	traits::db::Db,
 	utils::{send_2fa_mail, verify_mail, verify_password},
 };
 
+use serde_json::json;
+
 #[derive(Debug, FromForm)]
 pub struct Login {
 	mail: String,
 	password: String,
+	remember_me: bool,
 }
 
 #[derive(Debug, FromForm)]
 pub struct Twofa {
 	pub code: String,
 	pub transaction_id: String,
+	pub user_type: String,
+	pub remember_me: bool,
 }
 
 #[post("/login_university", data = "<form>")]
@@ -86,7 +92,17 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 	let twofa = form.into_inner();
 
 	if redis::check_2fa_code(&twofa)? {
+		let session_id = Uuid::new_v4().to_string();
+		let session_data = json!({
+			"user_id": get_user_id_from_twofa(&twofa),
+			"user_type": twofa.user_type,
+		});
+
+		let ttl_seconds = if twofa.remember_me { 30 * 24 * 3600} else { 30 * 60 };
+		println!("{session_id}, {session_data}, {ttl_seconds}");
+		//todo!("Faire la méthode associée dans redis (set la session, delete etc...)");
 		redis::invalidate_transactionid(&twofa)?;
+
 		Ok("Logged in".to_string())
 	} else {
 		Ok("Incorrect code".to_string())
