@@ -35,7 +35,7 @@ pub async fn login_university(form: Form<Login>) -> Result<String, String> {
 	if verify_password(&login.password, &correct_password)? {
 		let code = send_2fa_mail(&login.mail).await?;
 		let transaction_id = redis::get_transactionid(id, code)?;
-		Ok(format!("{{\"transaction_id\":\"{transaction_id}\""))
+		Ok(format!("{{\"transaction_id\":\"{transaction_id}\"}}"))
 	} else {
 		Err("Invalid Password".to_string())
 	}
