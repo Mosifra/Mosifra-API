@@ -54,7 +54,8 @@ fn rocket() -> _ {
 				user::create_company,
 				login::login_university,
 				login::login_student,
-				login::login_company
+				login::login_company,
+				login::twofa
 			],
 		)
 		.attach(cors.to_cors().unwrap())
