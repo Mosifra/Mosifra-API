@@ -107,3 +107,8 @@ pub fn generate_password() -> Result<String, &'static str> {
 		.strict(true)
 		.generate_one()
 }
+
+// #[allow(clippy::missing_errors_doc)]
+// pub fn create_jwt(user_type: String, user_id: String) {
+	
+// }
