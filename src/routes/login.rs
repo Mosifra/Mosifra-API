@@ -98,9 +98,13 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 			"user_type": twofa.user_type,
 		});
 
-		let ttl_seconds = if twofa.remember_me { 30 * 24 * 3600} else { 30 * 60 };
+		let ttl_seconds: u64 = if twofa.remember_me {
+			30 * 24 * 3600
+		} else {
+			30 * 60
+		};
 		println!("{session_id}, {session_data}, {ttl_seconds}");
-		//todo!("Faire la méthode associée dans redis (set la session, delete etc...)");
+		redis::set_session(&session_id, &session_data, ttl_seconds)?;
 		redis::invalidate_transactionid(&twofa)?;
 
 		Ok("Logged in".to_string())

@@ -1,5 +1,6 @@
 use redis::{Connection, TypedCommands};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use uuid::Uuid;
 
 use crate::routes::login::Twofa;
@@ -57,9 +58,34 @@ pub fn invalidate_transactionid(twofa: &Twofa) -> Result<(), String> {
 pub fn get_user_id_from_twofa(twofa: &Twofa) -> Result<String, String> {
 	let mut con = setup_redis()?;
 
-	let val = con.get(format!("login:{}", twofa.transaction_id)).unwrap().unwrap();
+	let val = con
+		.get(format!("login:{}", twofa.transaction_id))
+		.unwrap()
+		.unwrap();
 
 	let check: LoginTransaction = serde_json::from_str(&val).unwrap();
 
 	Ok(check.user_id)
+}
+
+pub fn set_session(session_id: &str, session_data: &Value, ttl_seconds: u64) -> Result<(), String> {
+	let mut con = setup_redis()?;
+
+	con.set_ex(
+		format!("session:{session_id}"),
+		session_data.to_string(),
+		ttl_seconds,
+	)
+	.map_err(|e| format!("Failed to set session:session_id to redis : {e}"))?;
+
+	Ok(())
+}
+
+pub fn invalidate_session(session_id: &str) -> Result<(), String> {
+	let mut con = setup_redis()?;
+
+	con.del(format!("session:{session_id}"))
+		.map_err(|e| format!("Failed to delete session:session_id from redis : {e}"))?;
+
+	Ok(())
 }
