@@ -85,7 +85,7 @@ pub async fn login_student(form: Form<Login>) -> Result<String, String> {
 	}
 }
 
-#[post("/2fa", data = "<form>")]
+#[post("/twofa", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
