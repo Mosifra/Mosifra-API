@@ -1,3 +1,25 @@
+-- Table université
+CREATE TABLE university (
+    id VARCHAR(128) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    login VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Table promo
+CREATE TABLE class (
+    id VARCHAR(128) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
+    start_date DATE,
+    end_date DATE,
+    min_size INT,
+    max_size INT.
+    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT,
+);
+
+
 -- Table étudiant
 CREATE TABLE student (
     id VARCHAR(128) PRIMARY KEY,
@@ -13,27 +35,6 @@ CREATE TABLE student (
 CREATE TABLE course_type (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL
-);
-
--- Table promo
-CREATE TABLE class (
-    id VARCHAR(128) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
-    start_date DATE,
-    end_date DATE,
-    min_size INT,
-    max_size INT.
-    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT,
-);
-
--- Table université
-CREATE TABLE university (
-    id VARCHAR(128) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    login VARCHAR(100) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    mail VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Table entreprise
