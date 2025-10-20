@@ -16,7 +16,7 @@ CREATE TABLE class (
     end_date DATE,
     min_size INT,
     max_size INT,
-    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT,
+    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT
 );
 
 
@@ -28,7 +28,7 @@ CREATE TABLE student (
     login VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     mail VARCHAR(255) UNIQUE NOT NULL,
-    class_id VARCHAR(128) REFERENCES class(id) ON DELETE RESTRICT,
+    class_id VARCHAR(128) REFERENCES class(id) ON DELETE RESTRICT
 );
 
 -- Table type de formation
