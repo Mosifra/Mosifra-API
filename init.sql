@@ -15,7 +15,7 @@ CREATE TABLE class (
     start_date DATE,
     end_date DATE,
     min_size INT,
-    max_size INT.
+    max_size INT,
     university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT,
 );
 
