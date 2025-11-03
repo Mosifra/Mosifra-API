@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use argon2::{
 	Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
