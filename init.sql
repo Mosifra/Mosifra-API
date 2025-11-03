@@ -1,3 +1,9 @@
+-- Table type de formation
+CREATE TABLE course_type (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
 -- Table université
 CREATE TABLE university (
     id VARCHAR(128) PRIMARY KEY,
@@ -29,12 +35,6 @@ CREATE TABLE student (
     password VARCHAR(255) NOT NULL,
     mail VARCHAR(255) UNIQUE NOT NULL,
     class_id VARCHAR(128) REFERENCES class(id) ON DELETE RESTRICT
-);
-
--- Table type de formation
-CREATE TABLE course_type (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
 );
 
 -- Table entreprise
