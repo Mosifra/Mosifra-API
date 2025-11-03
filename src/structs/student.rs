@@ -1,8 +1,9 @@
+use csv::StringRecord;
 use uuid::Uuid;
 
 use crate::{
 	traits::db::Db,
-	utils::{generate_password, hash_password},
+	utils::{self, generate_login, generate_password, hash_password},
 };
 
 #[derive(Debug)]
@@ -17,25 +18,42 @@ pub struct Student {
 
 #[derive(Debug, FromForm)]
 pub struct StudentDto {
-	pub login: String,
 	pub mail: String,
 	pub first_name: String,
 	pub last_name: String,
 }
 
-impl TryFrom<StudentDto> for Student {
-	type Error = String;
-
-	fn try_from(value: StudentDto) -> Result<Self, Self::Error> {
+impl Student {
+	pub async fn try_from(value: StudentDto) -> Result<Self, String> {
 		let password = generate_password()?;
+		let login = generate_login(&value.first_name, &value.last_name).await?;
 
 		Ok(Self {
 			id: Uuid::new_v4().to_string(),
-			login: value.login,
+			login,
 			password,
 			mail: value.mail,
 			first_name: value.first_name,
 			last_name: value.last_name,
+		})
+	}
+
+	pub async fn from_record(record: StringRecord) -> Result<Self, String> {
+		let first_name = (&record[0]).to_string();
+		let last_name = (&record[1]).to_string();
+
+		let id = Uuid::new_v4().to_string();
+		let login = generate_login(&first_name, &last_name).await?;
+		let password = generate_password()?;
+		let mail = record[2].to_string();
+
+		Ok(Self {
+			id,
+			login,
+			password,
+			mail,
+			first_name,
+			last_name,
 		})
 	}
 }

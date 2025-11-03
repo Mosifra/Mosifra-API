@@ -31,7 +31,7 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_student(form: Form<StudentDto>) -> Result<String, String> {
-	let student = Student::try_from(form.into_inner())?;
+	let student = Student::try_from(form.into_inner()).await?;
 	println!("{student:#?}");
 
 	if verify_mail(&student.mail) {

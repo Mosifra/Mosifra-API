@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use argon2::{
 	Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 	password_hash::{SaltString, rand_core::OsRng},
@@ -11,6 +13,11 @@ use lettre::{
 use passwords::PasswordGenerator;
 use rand::seq::{IndexedRandom, SliceRandom};
 use regex::Regex;
+
+use crate::{
+	structs::student::Student,
+	traits::db::{Db, is_login_taken},
+};
 
 #[must_use]
 #[allow(
@@ -106,4 +113,39 @@ pub fn generate_password() -> Result<String, &'static str> {
 		.exclude_similar_characters(true)
 		.strict(true)
 		.generate_one()
+}
+
+// Yaniss Lasbordes -> ylasbordes1 if already exist ylasbordes2 until ylasbordesn
+
+pub async fn generate_login(first_name: &str, last_name: &str) -> Result<String, String> {
+	let first_name = first_name.to_lowercase();
+	let last_name = last_name.to_lowercase();
+	let Some(first_name_letter) = first_name.chars().next() else {
+		return Err("first_name is empty".to_string());
+	};
+	let mut res;
+	let mut i = 1;
+
+	loop {
+		res = format!("{first_name_letter}{last_name}{i}");
+		if !is_login_taken(&res).await? {
+			break;
+		}
+		i += 1;
+	}
+
+	Ok(res)
+}
+
+pub async fn read_csv(file_path: PathBuf) -> Result<(), String> {
+	let mut reader = csv::Reader::from_path(file_path).unwrap();
+
+	for result in reader.records() {
+		let record = result.unwrap();
+
+		let student = Student::from_record(record).await?;
+		student.insert().await?;
+	}
+
+	Ok(())
 }
