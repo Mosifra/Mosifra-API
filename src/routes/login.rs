@@ -1,7 +1,4 @@
-use rocket::{
-    form::Form,
-    http::{Cookie, CookieJar, SameSite},
-};
+use rocket::form::Form;
 use uuid::Uuid;
 
 use crate::{
@@ -70,7 +67,7 @@ pub async fn login_student(form: Form<LoginForm>) -> Result<String, String> {
 #[post("/twofa", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub fn twofa(form: Form<Twofa>, cookies: &CookieJar<'_>) -> Result<String, String> {
+pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
     let twofa = form.into_inner();
 
     if redis::check_2fa_code(&twofa)? {
@@ -87,24 +84,6 @@ pub fn twofa(form: Form<Twofa>, cookies: &CookieJar<'_>) -> Result<String, Strin
         };
         redis::set_session(&session_id, &session_data, ttl_seconds)?;
         redis::invalidate_transactionid(&twofa)?;
-
-        cookies.add(
-            Cookie::build(("session_id", session_id))
-                .path("/")
-                .domain("localhost")
-                .http_only(true)
-                .same_site(SameSite::None)
-                .build(),
-        );
-
-        cookies.add(
-            Cookie::build(("userType", twofa.user_type))
-                .path("/")
-                .domain("localhost")
-                .http_only(true)
-                .same_site(SameSite::None)
-                .build(),
-        );
 
         Ok("Logged in".to_string())
     } else {
