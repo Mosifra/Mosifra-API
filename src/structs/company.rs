@@ -1,53 +1,53 @@
 use uuid::Uuid;
 
 use crate::{
-    traits::db::Db,
-    utils::{generate_password, hash_password},
+	traits::db::{Db, DbCompany},
+	utils::{generate_password, hash_password, verify_password},
 };
 
 use super::internship::Internship;
 
 #[derive(Debug)]
 pub struct Company {
-    pub id: String,
-    pub login: String,
-    pub password: String,
-    pub mail: String,
-    pub name: String,
-    pub internship_list: Vec<Internship>,
+	pub id: String,
+	pub login: String,
+	pub password: String,
+	pub mail: String,
+	pub name: String,
+	pub internship_list: Vec<Internship>,
 }
 
 #[derive(Debug, FromForm)]
 pub struct CompanyDto {
-    pub login: String,
-    pub mail: String,
-    pub name: String,
+	pub login: String,
+	pub mail: String,
+	pub name: String,
 }
 
 impl TryFrom<CompanyDto> for Company {
-    type Error = String;
+	type Error = String;
 
-    fn try_from(value: CompanyDto) -> Result<Self, Self::Error> {
-        let password = generate_password()?;
+	fn try_from(value: CompanyDto) -> Result<Self, Self::Error> {
+		let password = generate_password()?;
 
-        Ok(Self {
-            id: Uuid::new_v4().to_string(),
-            login: value.login,
-            password,
-            mail: value.mail,
-            name: value.name,
-            internship_list: Vec::new(),
-        })
-    }
+		Ok(Self {
+			id: Uuid::new_v4().to_string(),
+			login: value.login,
+			password,
+			mail: value.mail,
+			name: value.name,
+			internship_list: Vec::new(),
+		})
+	}
 }
 
 #[async_trait]
 impl Db for Company {
-    async fn insert(&self) -> Result<String, String> {
-        let client = Self::setup_database().await?;
-        let password_hash = hash_password(&self.password)?;
+	async fn insert(&self) -> Result<String, String> {
+		let client = Self::setup_database().await?;
+		let password_hash = hash_password(&self.password)?;
 
-        let row = client
+		let row = client
 			.query_one(
 				"INSERT INTO company (name, login, password, mail) VALUES ($1, $2, $3, $4) RETURNING id;",
 				&[&self.name, &self.login, &password_hash, &self.mail],
@@ -55,39 +55,72 @@ impl Db for Company {
 			.await
 			.map_err(|e| format!("INSERT error: {e}"))?;
 
-        let new_id: i32 = row.get(0);
-        println!("Company created with id = {new_id}");
+		let new_id: i32 = row.get(0);
+		println!("Company created with id = {new_id}");
 
-        Ok(format!(
-            "Values {}, {}, {}, {password_hash} (encoded password) inserted with id {new_id}",
-            self.login, self.name, self.mail
-        ))
-    }
+		Ok(format!(
+			"Values {}, {}, {}, {password_hash} (encoded password) inserted with id {new_id}",
+			self.login, self.name, self.mail
+		))
+	}
 
-    async fn get_password_from_mail(mail: &str) -> Result<String, String> {
-        let client = Self::setup_database().await?;
+	async fn login(login: &str, password: &str) -> Result<Self, String>
+	where
+		Self: Sized,
+	{
+		let client = Self::setup_database().await?;
 
-        let row = client
-            .query_one("SELECT password FROM company WHERE mail=$1;", &[&mail])
-            .await
-            .map_err(|e| format!("SELECT error: {e}"))?;
+		let row = client
+			.query_one("SELECT password from company WHERE login=$1", &[&login])
+			.await
+			.map_err(|e| format!("SELECT error: {e}"))?;
 
-        let hashed_password: String = row.get(0);
+		let hashed_password: String = row.get(0);
 
-        Ok(hashed_password)
-    }
+		if verify_password(password, &hashed_password)? {
+			let row = client
+				.query_one(
+					"SELECT id, name, login, password, mail from company WHERE login=$1",
+					&[&login],
+				)
+				.await
+				.map_err(|e| format!("SELECT error: {e}"))?;
 
-    async fn get_id_from_mail(_mail: &str) -> Result<String, String> {
-        unimplemented!()
-    }
+			let id: String = row.get(0);
+			let name: String = row.get(1);
+			let login: String = row.get(2);
+			let password: String = row.get(3);
+			let mail: String = row.get(4);
 
-    // async fn get_name_from_userid(user_id: String) -> Result<String, String> {
-    //     let client = Self::setup_database().await?;
-    //
-    //     let row = client
-    //         .query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
-    //         .await
-    //         .map_err(|e| format!("SELECT error: {e}"))?;
-    //     Ok(String::from("a"))
-    // }
+			let company = Self {
+				id,
+				login,
+				password,
+				mail,
+				name,
+				internship_list: vec![], //WIP
+			};
+
+			Ok(company)
+		} else {
+			Err("password incorrect".to_string())
+		}
+	}
+}
+
+#[async_trait]
+impl DbCompany for Company {
+	async fn get_name(&self, user_id: String) -> Result<String, String> {
+		let client = Self::setup_database().await?;
+
+		let row = client
+			.query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
+			.await
+			.map_err(|e| format!("SELECT error: {e}"))?;
+
+		let res: String = row
+			.try_get(0)
+			.map_err(|e| format!("Error while trying to get name of company : {e}"))?;
+		Ok(res)
+	}
 }

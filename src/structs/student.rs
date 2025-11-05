@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
 	traits::db::Db,
-	utils::{self, generate_login, generate_password, hash_password},
+	utils::{generate_login, generate_password, hash_password, verify_password},
 };
 
 #[derive(Debug)]
@@ -18,29 +18,14 @@ pub struct Student {
 
 #[derive(Debug, FromForm)]
 pub struct StudentDto {
-	pub mail: String,
-	pub first_name: String,
-	pub last_name: String,
+	pub login: String,
+	pub password: String,
 }
 
 impl Student {
-	pub async fn try_from(value: StudentDto) -> Result<Self, String> {
-		let password = generate_password()?;
-		let login = generate_login(&value.first_name, &value.last_name).await?;
-
-		Ok(Self {
-			id: Uuid::new_v4().to_string(),
-			login,
-			password,
-			mail: value.mail,
-			first_name: value.first_name,
-			last_name: value.last_name,
-		})
-	}
-
 	pub async fn from_record(record: StringRecord) -> Result<Self, String> {
-		let first_name = (&record[0]).to_string();
-		let last_name = (&record[1]).to_string();
+		let first_name = record[0].to_string();
+		let last_name = record[1].to_string();
 
 		let id = Uuid::new_v4().to_string();
 		let login = generate_login(&first_name, &last_name).await?;
@@ -81,20 +66,47 @@ impl Db for Student {
 		))
 	}
 
-	async fn get_password_from_mail(mail: &str) -> Result<String, String> {
+	async fn login(login: &str, password: &str) -> Result<Self, String>
+	where
+		Self: Sized,
+	{
 		let client = Self::setup_database().await?;
 
 		let row = client
-			.query_one("SELECT password FROM student WHERE mail=$1;", &[&mail])
+			.query_one("SELECT password from student WHERE login=$1", &[&login])
 			.await
 			.map_err(|e| format!("SELECT error: {e}"))?;
 
 		let hashed_password: String = row.get(0);
 
-		Ok(hashed_password)
-	}
+		if verify_password(password, &hashed_password)? {
+			let row = client
+				.query_one(
+					"SELECT id, first_name, last_name, login, password, mail from student WHERE login=$1",
+					&[&login],
+				)
+				.await
+				.map_err(|e| format!("SELECT error: {e}"))?;
 
-	async fn get_id_from_mail(_mail: &str) -> Result<String, String> {
-		unimplemented!()
+			let id: String = row.get(0);
+			let first_name: String = row.get(1);
+			let last_name: String = row.get(2);
+			let login: String = row.get(3);
+			let password: String = row.get(4);
+			let mail: String = row.get(5);
+
+			let student = Self {
+				id,
+				login,
+				password,
+				mail,
+				first_name,
+				last_name,
+			};
+
+			Ok(student)
+		} else {
+			Err("password incorrect".to_string())
+		}
 	}
 }

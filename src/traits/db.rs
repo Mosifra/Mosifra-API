@@ -24,9 +24,14 @@ pub trait Db {
 
 	async fn insert(&self) -> Result<String, String>;
 
-	async fn get_password_from_mail(mail: &str) -> Result<String, String>;
+	async fn login(login: &str, password: &str) -> Result<Self, String>
+	where
+		Self: Sized;
+}
 
-	async fn get_id_from_mail(mail: &str) -> Result<String, String>;
+#[async_trait]
+pub trait DbCompany {
+	async fn get_name(&self, user_id: String) -> Result<String, String>;
 }
 
 pub async fn is_login_taken(username: &str) -> Result<bool, String> {

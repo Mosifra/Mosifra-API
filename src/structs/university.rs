@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use crate::{
 	traits::db::Db,
-	utils::{generate_password, hash_password},
+	utils::{generate_password, hash_password, verify_password},
 };
 
 use super::{
@@ -72,30 +72,47 @@ impl Db for University {
 		))
 	}
 
-	async fn get_password_from_mail(mail: &str) -> Result<String, String> {
+	async fn login(login: &str, password: &str) -> Result<Self, String>
+	where
+		Self: Sized,
+	{
 		let client = Self::setup_database().await?;
 
 		let row = client
-			.query_one("SELECT password FROM university WHERE mail=$1;", &[&mail])
+			.query_one("SELECT password from university WHERE login=$1", &[&login])
 			.await
 			.map_err(|e| format!("SELECT error: {e}"))?;
 
 		let hashed_password: String = row.get(0);
 
-		Ok(hashed_password)
-	}
+		if verify_password(password, &hashed_password)? {
+			let row = client
+				.query_one(
+					"SELECT id, name, login, password, mail from university WHERE login=$1",
+					&[&login],
+				)
+				.await
+				.map_err(|e| format!("SELECT error: {e}"))?;
 
-	async fn get_id_from_mail(mail: &str) -> Result<String, String> {
-		let client = Self::setup_database().await?;
+			let id: String = row.get(0);
+			let name: String = row.get(1);
+			let login: String = row.get(2);
+			let password: String = row.get(3);
+			let mail: String = row.get(4);
 
-		let row = client
-			.query_one("SELECT id FROM university WHERE mail=$1;", &[&mail])
-			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
-
-		let id: String = row.get(0);
-
-		Ok(id)
+			let university = Self {
+				id,
+				login,
+				password,
+				name,
+				mail,
+				class_list: vec![],     //WIP
+				intership_list: vec![], //WIP
+			};
+			Ok(university)
+		} else {
+			Err("password incorrect".to_string())
+		}
 	}
 }
 
