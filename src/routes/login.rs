@@ -91,16 +91,18 @@ pub fn twofa(form: Form<Twofa>, cookies: &CookieJar<'_>) -> Result<String, Strin
         cookies.add(
             Cookie::build(("session_id", session_id))
                 .path("/")
+                .domain("localhost")
                 .http_only(true)
-                .same_site(SameSite::Lax)
+                .same_site(SameSite::None)
                 .build(),
         );
 
         cookies.add(
             Cookie::build(("userType", twofa.user_type))
                 .path("/")
+                .domain("localhost")
                 .http_only(true)
-                .same_site(SameSite::Lax)
+                .same_site(SameSite::None)
                 .build(),
         );
 
