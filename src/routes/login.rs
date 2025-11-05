@@ -1,6 +1,6 @@
 use rocket::{
     form::Form,
-    http::{Cookie, CookieJar},
+    http::{Cookie, CookieJar, SameSite},
 };
 use uuid::Uuid;
 
@@ -92,6 +92,7 @@ pub fn twofa(form: Form<Twofa>, cookies: &CookieJar<'_>) -> Result<String, Strin
             Cookie::build(("session_id", session_id))
                 .path("/")
                 .http_only(true)
+                .same_site(SameSite::Lax)
                 .build(),
         );
 
@@ -99,6 +100,7 @@ pub fn twofa(form: Form<Twofa>, cookies: &CookieJar<'_>) -> Result<String, Strin
             Cookie::build(("userType", twofa.user_type))
                 .path("/")
                 .http_only(true)
+                .same_site(SameSite::Lax)
                 .build(),
         );
 
