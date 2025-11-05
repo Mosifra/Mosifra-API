@@ -51,10 +51,10 @@ CREATE TABLE internship (
     id VARCHAR(128) PRIMARY KEY,
     course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
     company_id VARCHAR(128) REFERENCES company(id) ON DELETE SET NULL,
-    start_date DATE,
-    end_date DATE,
-    min_internship_length INT,
-    max_internship_length INT,
+    start_date DATE, -- Total start time
+    end_date DATE, -- Total end time
+    min_internship_length INT, -- Minimum length of the internship
+    max_internship_length INT, -- Maximum length of the internship
     title VARCHAR(255),
     description TEXT,
     place VARCHAR(255)
