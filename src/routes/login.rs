@@ -12,7 +12,7 @@ use crate::{
 };
 
 #[derive(Debug, FromForm)]
-pub struct Login {
+pub struct LoginForm {
 	login: String,
 	password: String,
 	remember_me: bool,
@@ -29,7 +29,7 @@ pub struct Twofa {
 #[post("/login_university", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn login_university(form: Form<Login>) -> Result<String, String> {
+pub async fn login_university(form: Form<LoginForm>) -> Result<String, String> {
 	let login = form.into_inner();
 	let university = University::login(&login.login, &login.password).await;
 
@@ -44,7 +44,7 @@ pub async fn login_university(form: Form<Login>) -> Result<String, String> {
 #[post("/login_company", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn login_company(form: Form<Login>) -> Result<String, String> {
+pub async fn login_company(form: Form<LoginForm>) -> Result<String, String> {
 	let login = form.into_inner();
 	let company = Company::login(&login.login, &login.password).await;
 
@@ -57,7 +57,7 @@ pub async fn login_company(form: Form<Login>) -> Result<String, String> {
 #[post("/login_student", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn login_student(form: Form<Login>) -> Result<String, String> {
+pub async fn login_student(form: Form<LoginForm>) -> Result<String, String> {
 	let login = form.into_inner();
 	let student = Student::login(&login.login, &login.password).await;
 
