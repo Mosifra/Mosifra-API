@@ -79,7 +79,7 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 	if redis::check_2fa_code(&twofa)? {
 		let session_id = Uuid::new_v4().to_string();
 		let session_data = SessionData {
-			user_id: get_user_id_from_twofa(&twofa)?.to_string(),
+			user_id: get_user_id_from_twofa(&twofa)?,
 			user_type: twofa.user_type.clone(),
 		};
 
