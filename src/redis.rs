@@ -113,3 +113,13 @@ pub async fn get_user_id_from_session_id(session_id: String) -> Result<String, S
 
 	Ok(session_data.user_id.to_string())
 }
+
+pub fn session_exist(session_id: &str) -> Result<bool, String> {
+	let mut con = setup_redis()?;
+
+	let res = con
+		.get(format!("session:{session_id}"))
+		.map_err(|e| format!("Failed to get session:session_id from redis : {e}"))?;
+
+	Ok(res.is_some())
+}

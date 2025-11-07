@@ -1,5 +1,5 @@
 use rocket::form::Form;
-use serde_json::{Value, json};
+use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
@@ -22,6 +22,11 @@ pub struct Twofa {
 	pub transaction_id: String,
 	pub user_type: String,
 	pub remember_me: bool,
+}
+
+#[derive(Debug, FromForm)]
+pub struct CheckSession {
+	pub session_id_to_check: String,
 }
 
 #[post("/login_university", data = "<form>")]
@@ -98,4 +103,17 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 
 		Ok(res.to_string())
 	}
+}
+
+#[post("/check_session", data = "<form>")]
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::missing_errors_doc)]
+pub fn check_session(form: Form<CheckSession>) -> Result<String, String> {
+	let session_id = &form.into_inner().session_id_to_check;
+	let is_session_valid = redis::session_exist(session_id)?;
+	let data = json!({
+		"valid": is_session_valid
+	});
+
+	Ok(data.to_string())
 }
