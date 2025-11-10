@@ -5,3 +5,4 @@ pub mod internship;
 pub mod role;
 pub mod student;
 pub mod university;
+pub mod jwt;
