@@ -32,14 +32,18 @@ impl Student {
 		let password = generate_password()?;
 		let mail = record[2].to_string();
 
-		Ok(Self {
+		let student = Self {
 			id,
 			login,
 			password,
 			mail,
 			first_name,
 			last_name,
-		})
+		};
+
+		println!("{student:#?}");
+
+		Ok(student)
 	}
 }
 
