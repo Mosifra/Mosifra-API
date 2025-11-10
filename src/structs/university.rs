@@ -59,9 +59,15 @@ impl Db for University {
 		let password_hash = hash_password(&self.password)?;
 
 		client
-			.query_one(
-				"INSERT INTO university (id, name, mail, login, password) VALUES ($1, $2, $3, $4, $5) RETURNING id;",
-				&[&self.id, &self.name, &self.mail, &self.login, &password_hash],
+			.query_opt(
+				"INSERT INTO university (id, name, mail, login, password) VALUES ($1, $2, $3, $4, $5)",
+				&[
+					&self.id,
+					&self.name,
+					&self.mail,
+					&self.login,
+					&password_hash,
+				],
 			)
 			.await
 			.map_err(|e| format!("INSERT error: {e}"))?;

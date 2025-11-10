@@ -51,6 +51,7 @@ fn rocket() -> _ {
 			routes![
 				user::create_university,
 				user::create_company,
+				user::student_csv,
 				login::login_university,
 				login::login_student,
 				login::login_company,

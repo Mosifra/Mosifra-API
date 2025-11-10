@@ -46,20 +46,18 @@ impl Db for Company {
 	async fn insert(&self) -> Result<String, String> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
+		let id = Uuid::new_v4().to_string();
 
-		let row = client
-			.query_one(
-				"INSERT INTO company (name, login, password, mail) VALUES ($1, $2, $3, $4) RETURNING id;",
-				&[&self.name, &self.login, &password_hash, &self.mail],
+		client
+			.query_opt(
+				"INSERT INTO company (id, name, login, password, mail) VALUES ($1, $2, $3, $4);",
+				&[&id, &self.name, &self.login, &password_hash, &self.mail],
 			)
 			.await
 			.map_err(|e| format!("INSERT error: {e}"))?;
 
-		let new_id: i32 = row.get(0);
-		println!("Company created with id = {new_id}");
-
 		Ok(format!(
-			"Values {}, {}, {}, {password_hash} (encoded password) inserted with id {new_id}",
+			"Values {}, {}, {}, {password_hash} (encoded password) inserted with id {id}",
 			self.login, self.name, self.mail
 		))
 	}

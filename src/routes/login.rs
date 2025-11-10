@@ -22,6 +22,7 @@ pub struct Twofa {
 	pub transaction_id: String,
 	pub user_type: String,
 	pub remember_me: bool,
+	pub mail: String,
 }
 
 #[derive(Debug, FromForm)]

@@ -37,10 +37,9 @@ pub trait DbCompany {
 pub async fn is_login_taken(username: &str) -> Result<bool, String> {
 	let client = setup_database().await?;
 	let row = client
-		.query_one("SELECT 1 FROM student WHERE login='$1';", &[&username])
+		.query_opt("SELECT 1 FROM student WHERE login=$1;", &[&username])
 		.await
 		.map_err(|e| format!("SELECT error: {e}"))?;
 
-	let username_taken: i32 = row.get(0);
-	Ok(username_taken == 1)
+	Ok(row.is_some())
 }
