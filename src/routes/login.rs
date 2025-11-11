@@ -1,10 +1,15 @@
+use std::str::FromStr;
+
 use rocket::form::Form;
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
 	redis::{self, SessionData, get_user_id_from_twofa},
-	structs::{company::Company, student::Student, university::University},
+	structs::{
+		company::Company, jwt::UserJwt, student::Student, university::University,
+		user_type::UserType,
+	},
 	traits::db::Db,
 	utils::set_transaction_id,
 };
@@ -22,12 +27,11 @@ pub struct Twofa {
 	pub transaction_id: String,
 	pub user_type: String,
 	pub remember_me: bool,
-	pub mail: String,
 }
 
 #[derive(Debug, FromForm)]
-pub struct CheckSession {
-	pub session_id_to_check: String,
+pub struct Jwt {
+	pub jwt: String,
 }
 
 #[post("/login_university", data = "<form>")]
@@ -81,7 +85,6 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 		let session_id = Uuid::new_v4().to_string();
 		let session_data = SessionData {
 			user_id: get_user_id_from_twofa(&twofa)?,
-			user_type: twofa.user_type.clone(),
 		};
 
 		let ttl_seconds: u64 = if twofa.remember_me {
@@ -92,14 +95,17 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 		redis::set_session(&session_id, &session_data, ttl_seconds)?;
 		redis::invalidate_transactionid(&twofa)?;
 
+		let jwt =
+			UserJwt::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?;
+
 		let res = json!({
-			"session_id": session_id,
+			"jwt": jwt,
 		});
 
 		Ok(res.to_string())
 	} else {
 		let res = json!({
-			"session_id": null,
+			"jwt": null,
 		});
 
 		Ok(res.to_string())
@@ -109,9 +115,10 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 #[post("/check_session", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub fn check_session(form: Form<CheckSession>) -> Result<String, String> {
-	let session_id = &form.into_inner().session_id_to_check;
-	let is_session_valid = redis::session_exist(session_id)?;
+pub fn check_session(form: Form<Jwt>) -> Result<String, String> {
+	let jwt = &form.into_inner().jwt;
+	let user_jwt = UserJwt::from_raw_jwt(jwt)?;
+	let is_session_valid = redis::session_exist(&user_jwt.session_id)?;
 	let data = json!({
 		"valid": is_session_valid
 	});

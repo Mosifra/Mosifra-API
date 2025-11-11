@@ -25,7 +25,7 @@ fn rocket() -> _ {
 
 	let rocket_secret = env::var("ROCKET_SECRET").ok().map_or_else(
 		|| {
-			eprintln!("Secret must be in .env");
+			eprintln!("Rocket secret must be in .env");
 			exit(1)
 		},
 		|secret| secret,
@@ -52,6 +52,7 @@ fn rocket() -> _ {
 				user::create_university,
 				user::create_company,
 				user::student_csv,
+				user::get_user_type,
 				login::login_university,
 				login::login_student,
 				login::login_company,

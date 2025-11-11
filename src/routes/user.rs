@@ -3,6 +3,7 @@ use rocket::{Data, data::ToByteUnit, form::Form};
 use crate::{
 	structs::{
 		company::{Company, CompanyDto},
+		jwt::UserJwt,
 		student::Student,
 		university::{University, UniversityDto},
 	},
@@ -11,6 +12,8 @@ use crate::{
 };
 
 use serde_json::json;
+
+use super::login::Jwt;
 
 #[post("/user/create_university", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
@@ -62,4 +65,14 @@ pub async fn student_csv(data: Data<'_>) -> Result<String, String> {
 		student.insert().await?;
 	}
 	Ok(json!({"success": true}).to_string())
+}
+
+#[post("/user/get_user_type", data = "<form>")]
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::missing_errors_doc)]
+pub async fn get_user_type(form: Form<Jwt>) -> Result<String, String> {
+	let raw_jwt = form.into_inner().jwt;
+
+	let user_type = UserJwt::from_raw_jwt(&raw_jwt)?.user_type.to_string();
+	Ok(json!({"user_type": user_type}).to_string())
 }

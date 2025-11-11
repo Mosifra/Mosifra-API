@@ -13,7 +13,6 @@ struct LoginTransaction {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionData {
 	pub user_id: String,
-	pub user_type: String,
 }
 
 fn setup_redis() -> Result<Connection, String> {
@@ -99,19 +98,18 @@ pub fn invalidate_session(session_id: &str) -> Result<(), String> {
 	Ok(())
 }
 
-pub async fn get_user_id_from_session_id(session_id: String) -> Result<String, String> {
+pub fn get_user_id_from_session_id(session_id: String) -> Result<String, String> {
 	let mut con = setup_redis()?;
 	let line = con
 		.get(session_id)
 		.map_err(|e| format!("Error while getting line : {e}"))?;
-	let line = match line {
-		Some(line) => line,
-		None => return Err(format!("No value found")),
+	let Some(line) = line else {
+		return Err("No value found".to_string());
 	};
 	let session_data: SessionData = serde_json::from_str(&line)
 		.map_err(|e| format!("Error while deserializing session data: {e}"))?;
 
-	Ok(session_data.user_id.to_string())
+	Ok(session_data.user_id)
 }
 
 pub fn session_exist(session_id: &str) -> Result<bool, String> {
