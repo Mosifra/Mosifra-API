@@ -12,7 +12,11 @@ use crate::{
 pub async fn create_university(form: Form<UniversityDto>) -> Result<String, String> {
 	let university = University::try_from(form.into_inner())
 		.map_err(|()| "Error while converting UniversityDto".to_string())?; // Not ideal but will do
-	println!("{university:#?}");
+
+	println!("==========DEBUG==========");
+	println!("login : {}", university.login);
+	println!("password : {}", university.password);
+	println!("==========DEBUG==========");
 
 	if verify_mail(&university.mail) {
 		println!("correct mail");

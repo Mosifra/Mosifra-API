@@ -13,6 +13,14 @@ pub mod utils;
 #[macro_use]
 extern crate rocket;
 
+use routes::login_flow::login::login;
+use routes::login_flow::twofa::twofa;
+use routes::session::session::check_session;
+use routes::user::create::company::create_company;
+use routes::user::create::student::student_csv;
+use routes::user::create::university::create_university;
+use routes::user::get::user_type::get_user_type;
+
 #[launch]
 fn rocket() -> _ {
 	match dotenvy::dotenv() {
@@ -49,15 +57,13 @@ fn rocket() -> _ {
 		.mount(
 			"/",
 			routes![
-				user::create_university,
-				user::create_company,
-				user::student_csv,
-				user::get_user_type,
-				login::login_university,
-				login::login_student,
-				login::login_company,
-				login::twofa,
-				login::check_session
+				login,
+				twofa,
+				check_session,
+				create_company,
+				student_csv,
+				create_university,
+				get_user_type
 			],
 		)
 		.attach(cors.to_cors().unwrap())
