@@ -3,7 +3,7 @@ use serde_json::json;
 
 use crate::{routes::session::domain::Jwt, structs::jwt::UserJwt};
 
-#[get("/user/user_type", data = "<form>")]
+#[post("/user/user_type", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn get_user_type(form: Form<Jwt>) -> Result<String, String> {
