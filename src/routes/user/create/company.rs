@@ -1,16 +1,16 @@
-use rocket::form::Form;
+use rocket::{http::Status, serde::json::Json};
 
-use crate::{
-	structs::company::{Company, CompanyDto},
-	traits::db::Db,
-	utils::verify_mail,
-};
+use crate::{structs::company::Company, traits::db::Db, utils::verify_mail};
 
-#[post("/user/create_company", data = "<form>")]
+use super::domain::{CreateCompanyPayload, CreateCompanyResponse};
+
+#[post("/user/create_company", data = "<create_company_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn create_company(form: Form<CompanyDto>) -> Result<String, String> {
-	let company = Company::try_from(form.into_inner())?;
+pub async fn create_company(
+	create_company_payload: Json<CreateCompanyPayload>,
+) -> Result<Json<CreateCompanyResponse>, Status> {
+	let company = Company::try_from(create_company_payload.into_inner())?;
 	println!("{company:#?}");
 
 	if verify_mail(&company.mail) {
@@ -19,5 +19,9 @@ pub async fn create_company(form: Form<CompanyDto>) -> Result<String, String> {
 		println!("incorrect mail");
 	}
 
-	company.insert().await
+	let is_done = company.insert().await;
+
+	Ok(Json(CreateCompanyResponse {
+		success: is_done.is_ok(),
+	}))
 }

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use rocket::form::Form;
+use rocket::{http::Status, serde::json::Json};
 
 use crate::{
 	structs::{company::Company, student::Student, university::University, user_type::UserType},
@@ -8,13 +8,13 @@ use crate::{
 	utils::set_transaction_id,
 };
 
-use super::domain::Login;
+use super::domain::{LoginPayload, LoginResponse};
 
-#[post("/login", data = "<form>")]
+#[post("/login", data = "<login_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn login(form: Form<Login>) -> Result<String, String> {
-	let login = form.into_inner();
+pub async fn login(login_payload: Json<LoginPayload>) -> Result<Json<LoginResponse>, Status> {
+	let login = login_payload.into_inner();
 	let user_type = UserType::from_str(&login.user_type)?;
 
 	match user_type {
@@ -25,31 +25,43 @@ pub async fn login(form: Form<Login>) -> Result<String, String> {
 	}
 }
 
-pub async fn login_university(login: Login) -> Result<String, String> {
-	let university = University::login(&login.login, &login.password).await;
+pub async fn login_university(login: LoginPayload) -> Result<Json<LoginResponse>, Status> {
+	let university = University::login(&login.login, &login.password).await?;
 
 	match university {
-		Ok(university) => {
+		Some(university) => {
 			set_transaction_id(&university.mail, &university.id, login.remember_me).await
 		}
-		Err(e) => Err(format!("Invalid Password: {e}")),
+		None => Ok(Json(LoginResponse {
+			valid: false,
+			transaction_id: None,
+			remember_me: None,
+		})),
 	}
 }
 
-pub async fn login_company(login: Login) -> Result<String, String> {
-	let company = Company::login(&login.login, &login.password).await;
+pub async fn login_company(login: LoginPayload) -> Result<Json<LoginResponse>, Status> {
+	let company = Company::login(&login.login, &login.password).await?;
 
 	match company {
-		Ok(company) => set_transaction_id(&company.mail, &company.id, login.remember_me).await,
-		Err(e) => Err(format!("Invalid Password: {e}")),
+		Some(company) => set_transaction_id(&company.mail, &company.id, login.remember_me).await,
+		None => Ok(Json(LoginResponse {
+			valid: false,
+			transaction_id: None,
+			remember_me: None,
+		})),
 	}
 }
 
-pub async fn login_student(login: Login) -> Result<String, String> {
-	let student = Student::login(&login.login, &login.password).await;
+pub async fn login_student(login: LoginPayload) -> Result<Json<LoginResponse>, Status> {
+	let student = Student::login(&login.login, &login.password).await?;
 
 	match student {
-		Ok(student) => set_transaction_id(&student.mail, &student.id, login.remember_me).await,
-		Err(e) => Err(format!("Invalid Password: {e}")),
+		Some(student) => set_transaction_id(&student.mail, &student.id, login.remember_me).await,
+		None => Ok(Json(LoginResponse {
+			valid: false,
+			transaction_id: None,
+			remember_me: None,
+		})),
 	}
 }

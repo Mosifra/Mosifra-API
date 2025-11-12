@@ -1,17 +1,16 @@
-use rocket::form::Form;
+use rocket::{http::Status, serde::json::Json};
 
-use crate::{
-	structs::university::{University, UniversityDto},
-	traits::db::Db,
-	utils::verify_mail,
-};
+use crate::{structs::university::University, traits::db::Db, utils::verify_mail};
 
-#[post("/user/create_university", data = "<form>")]
+use super::domain::{CreateUniversityPayload, CreateUniversityResponse};
+
+#[post("/user/create_university", data = "<create_university_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn create_university(form: Form<UniversityDto>) -> Result<String, String> {
-	let university = University::try_from(form.into_inner())
-		.map_err(|()| "Error while converting UniversityDto".to_string())?; // Not ideal but will do
+pub async fn create_university(
+	create_university_payload: Json<CreateUniversityPayload>,
+) -> Result<Json<CreateUniversityResponse>, Status> {
+	let university = University::try_from(create_university_payload.into_inner())?;
 
 	println!("==========DEBUG==========");
 	println!("login : {}", university.login);
@@ -24,5 +23,9 @@ pub async fn create_university(form: Form<UniversityDto>) -> Result<String, Stri
 		println!("incorrect mail");
 	}
 
-	university.insert().await
+	let is_inserted = university.insert().await;
+
+	Ok(Json(CreateUniversityResponse {
+		success: is_inserted.is_ok(),
+	}))
 }

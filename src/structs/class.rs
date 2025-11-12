@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
-use rocket::time::Date;
+use chrono::NaiveDate;
+use rocket::http::Status;
+use serde::Deserialize;
 use uuid::Uuid;
 
 use super::course_type::CourseType;
@@ -12,20 +14,20 @@ pub struct Class {
 	id: String,
 	name: String,
 	course_type: CourseType,
-	date_internship_start: Date,
-	date_internship_end: Date,
+	date_internship_start: NaiveDate,
+	date_internship_end: NaiveDate,
 }
 
-#[derive(Debug, FromForm)]
+#[derive(Debug, Deserialize)]
 pub struct ClassDto {
 	name: String,
 	course_type: String,
-	date_internship_start: Date,
-	date_internship_end: Date,
+	date_internship_start: NaiveDate,
+	date_internship_end: NaiveDate,
 }
 
 impl TryFrom<ClassDto> for Class {
-	type Error = ();
+	type Error = Status;
 
 	fn try_from(value: ClassDto) -> Result<Self, Self::Error> {
 		Ok(Self {
@@ -35,27 +37,5 @@ impl TryFrom<ClassDto> for Class {
 			date_internship_start: value.date_internship_start,
 			date_internship_end: value.date_internship_end,
 		})
-	}
-}
-
-pub trait TryFromVecClassDtoToClassVec {
-	// Not sure how to fix this one
-	#[allow(
-		clippy::missing_panics_doc,
-		clippy::result_unit_err,
-		clippy::missing_errors_doc
-	)] // WIP
-	fn try_from_classdto_vec_to_class_vec(value: Vec<ClassDto>) -> Result<Self, ()>
-	where
-		Self: std::marker::Sized;
-}
-
-impl TryFromVecClassDtoToClassVec for Vec<Class> {
-	fn try_from_classdto_vec_to_class_vec(value: Vec<ClassDto>) -> Result<Self, ()> {
-		let mut res = vec![];
-		for class_dto in value {
-			res.push(Class::try_from(class_dto)?);
-		}
-		Ok(res)
 	}
 }

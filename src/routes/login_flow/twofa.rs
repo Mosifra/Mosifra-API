@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
-use rocket::form::Form;
-use serde_json::json;
+use rocket::{http::Status, serde::json::Json};
 use uuid::Uuid;
 
 use crate::{
@@ -9,19 +8,24 @@ use crate::{
 	structs::{jwt::UserJwt, user_type::UserType},
 };
 
-use super::domain::Twofa;
+use super::domain::{TwofaPayload, TwofaResponse};
 
-#[post("/twofa", data = "<form>")]
+#[post("/twofa", data = "<twofa_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
-	let twofa = form.into_inner();
+pub fn twofa(twofa_payload: Json<TwofaPayload>) -> Result<Json<TwofaResponse>, Status> {
+	let twofa = twofa_payload.into_inner();
 
 	if redis::check_2fa_code(&twofa)? {
 		let session_id = Uuid::new_v4().to_string();
-		let session_data = SessionData {
-			user_id: get_user_id_from_twofa(&twofa)?,
-		};
+		let user_id = get_user_id_from_twofa(&twofa)?;
+		if user_id.is_empty() {
+			return Ok(Json(TwofaResponse {
+				valid: false,
+				jwt: None,
+			}));
+		}
+		let session_data = SessionData { user_id };
 
 		let ttl_seconds: u64 = if twofa.remember_me {
 			30 * 24 * 3600
@@ -34,16 +38,19 @@ pub fn twofa(form: Form<Twofa>) -> Result<String, String> {
 		let jwt =
 			UserJwt::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?;
 
-		let res = json!({
-			"jwt": jwt,
-		});
+		let Some(jwt) = jwt else {
+			eprintln!("JWT is somehow not valid");
+			return Err(Status::InternalServerError);
+		};
 
-		Ok(res.to_string())
+		Ok(Json(TwofaResponse {
+			valid: true,
+			jwt: Some(jwt),
+		}))
 	} else {
-		let res = json!({
-			"jwt": null,
-		});
-
-		Ok(res.to_string())
+		Ok(Json(TwofaResponse {
+			valid: false,
+			jwt: None,
+		}))
 	}
 }

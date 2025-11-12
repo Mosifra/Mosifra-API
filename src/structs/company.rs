@@ -1,8 +1,9 @@
+use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
 	traits::db::{Db, DbCompany},
-	utils::{generate_password, hash_password, verify_password},
+	utils::{hash_password, verify_password},
 };
 
 use super::internship::Internship;
@@ -17,33 +18,9 @@ pub struct Company {
 	pub internship_list: Vec<Internship>,
 }
 
-#[derive(Debug, FromForm)]
-pub struct CompanyDto {
-	pub login: String,
-	pub mail: String,
-	pub name: String,
-}
-
-impl TryFrom<CompanyDto> for Company {
-	type Error = String;
-
-	fn try_from(value: CompanyDto) -> Result<Self, Self::Error> {
-		let password = generate_password()?;
-
-		Ok(Self {
-			id: Uuid::new_v4().to_string(),
-			login: value.login,
-			password,
-			mail: value.mail,
-			name: value.name,
-			internship_list: Vec::new(),
-		})
-	}
-}
-
 #[async_trait]
 impl Db for Company {
-	async fn insert(&self) -> Result<String, String> {
+	async fn insert(&self) -> Result<(), Status> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
 		let id = Uuid::new_v4().to_string();
@@ -54,15 +31,15 @@ impl Db for Company {
 				&[&id, &self.name, &self.login, &password_hash, &self.mail],
 			)
 			.await
-			.map_err(|e| format!("INSERT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("Error during company insert: {e}");
+				Status::InternalServerError
+			})?;
 
-		Ok(format!(
-			"Values {}, {}, {}, {password_hash} (encoded password) inserted with id {id}",
-			self.login, self.name, self.mail
-		))
+		Ok(())
 	}
 
-	async fn login(login: &str, password: &str) -> Result<Self, String>
+	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
 	where
 		Self: Sized,
 	{
@@ -71,7 +48,10 @@ impl Db for Company {
 		let row = client
 			.query_one("SELECT password from company WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("SELECT error: {e}");
+				Status::InternalServerError
+			})?;
 
 		let hashed_password: String = row.get(0);
 
@@ -82,7 +62,10 @@ impl Db for Company {
 					&[&login],
 				)
 				.await
-				.map_err(|e| format!("SELECT error: {e}"))?;
+				.map_err(|e| {
+					eprintln!("SELECT error: {e}");
+					Status::InternalServerError
+				})?;
 
 			let id: String = row.get(0);
 			let name: String = row.get(1);
@@ -99,26 +82,30 @@ impl Db for Company {
 				internship_list: vec![], //WIP
 			};
 
-			Ok(company)
+			Ok(Some(company))
 		} else {
-			Err("password incorrect".to_string())
+			Ok(None)
 		}
 	}
 }
 
 #[async_trait]
 impl DbCompany for Company {
-	async fn get_name(&self, user_id: String) -> Result<String, String> {
+	async fn get_name(&self, user_id: String) -> Result<String, Status> {
 		let client = Self::setup_database().await?;
 
 		let row = client
 			.query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
 			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("SELECT error: {e}");
+				Status::InternalServerError
+			})?;
 
-		let res: String = row
-			.try_get(0)
-			.map_err(|e| format!("Error while trying to get name of company : {e}"))?;
+		let res: String = row.try_get(0).map_err(|e| {
+			eprintln!("Error while trying to get name of company : {e}");
+			Status::InternalServerError
+		})?;
 		Ok(res)
 	}
 }

@@ -1,4 +1,5 @@
 use csv::StringRecord;
+use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
@@ -23,7 +24,7 @@ pub struct StudentDto {
 }
 
 impl Student {
-	pub async fn from_record(record: StringRecord) -> Result<Self, String> {
+	pub async fn from_record(record: StringRecord) -> Result<Self, Status> {
 		let first_name = record[0].to_string();
 		let last_name = record[1].to_string();
 
@@ -49,7 +50,7 @@ impl Student {
 
 #[async_trait]
 impl Db for Student {
-	async fn insert(&self) -> Result<String, String> {
+	async fn insert(&self) -> Result<(), Status> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
 		let id = Uuid::new_v4().to_string();
@@ -60,15 +61,12 @@ impl Db for Student {
             &[&id, &self.first_name, &self.last_name, &self.login, &password_hash, &self.mail],
         )
         .await
-        .map_err(|e| format!("INSERT student Error: {e}"))?;
+        .map_err(|e| {eprintln!("INSERT student Error: {e}"); Status::InternalServerError})?;
 
-		Ok(format!(
-			"Values {}, {}, {}, {}, {password_hash} (encoded password) inserted with id {id}",
-			self.login, self.first_name, self.last_name, self.mail
-		))
+		Ok(())
 	}
 
-	async fn login(login: &str, password: &str) -> Result<Self, String>
+	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
 	where
 		Self: Sized,
 	{
@@ -77,7 +75,10 @@ impl Db for Student {
 		let row = client
 			.query_one("SELECT password from student WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("SELECT error: {e}");
+				Status::InternalServerError
+			})?;
 
 		let hashed_password: String = row.get(0);
 
@@ -88,7 +89,10 @@ impl Db for Student {
 					&[&login],
 				)
 				.await
-				.map_err(|e| format!("SELECT error: {e}"))?;
+				.map_err(|e| {
+					eprintln!("SELECT error: {e}");
+					Status::InternalServerError
+				})?;
 
 			let id: String = row.get(0);
 			let first_name: String = row.get(1);
@@ -106,9 +110,9 @@ impl Db for Student {
 				last_name,
 			};
 
-			Ok(student)
+			Ok(Some(student))
 		} else {
-			Err("password incorrect".to_string())
+			Ok(None)
 		}
 	}
 }

@@ -2,6 +2,7 @@ use std::{collections::BTreeMap, env, process::exit};
 
 use hmac::{Hmac, Mac};
 use jwt::{SignWithKey, VerifyWithKey};
+use rocket::http::Status;
 use sha2::Sha256;
 
 use crate::{redis::session_exist, structs::user_type::UserType};
@@ -13,7 +14,7 @@ pub struct UserJwt {
 }
 
 impl UserJwt {
-	pub fn from_raw_jwt(raw_jwt: &str) -> Result<Self, String> {
+	pub fn from_raw_jwt(raw_jwt: &str) -> Result<Option<Self>, Status> {
 		let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
 			|| {
 				eprintln!("JWT Secret must be in .env");
@@ -21,39 +22,42 @@ impl UserJwt {
 			},
 			|secret| secret,
 		);
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-			.map_err(|e| format!("Error getting key from JWT secret : {e}"))?;
+		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes()).map_err(|e| {
+			eprintln!("Error getting key from JWT secret : {e}");
+			Status::InternalServerError
+		})?;
 
-		let claims: BTreeMap<String, String> = raw_jwt
-			.verify_with_key(&key)
-			.map_err(|e| format!("Error getting claims on jwt token : {e}"))?;
+		let claims: BTreeMap<String, String> = raw_jwt.verify_with_key(&key).map_err(|e| {
+			eprintln!("Error getting claims on jwt token : {e}");
+			Status::InternalServerError
+		})?;
 
 		let user_type = match claims["user_type"].as_str() {
 			"admin" => UserType::Admin,
 			"student" => UserType::Student,
 			"company" => UserType::Company,
 			"university" => UserType::University,
-			_ => return Err("Incorrect UserType".to_string()),
+			_ => return Ok(None),
 		};
 
 		let session_id = claims["session_id"].clone();
 
 		if session_exist(&session_id)? {
-			Ok(Self {
+			Ok(Some(Self {
 				session_id,
 				user_type,
-			})
+			}))
 		} else {
-			Err("Invalid session".to_string())
+			Ok(None)
 		}
 	}
 
 	pub fn new_raw_jwt_from_data(
 		session_id: String,
 		user_type: &UserType,
-	) -> Result<String, String> {
+	) -> Result<Option<String>, Status> {
 		if !session_exist(&session_id)? {
-			return Err("Invalid session".to_string());
+			return Ok(None);
 		}
 
 		let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
@@ -64,18 +68,21 @@ impl UserJwt {
 			|secret| secret,
 		);
 
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-			.map_err(|e| format!("Error getting key from JWT secret : {e}"))?;
+		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes()).map_err(|e| {
+			eprintln!("Error getting key from JWT secret : {e}");
+			Status::InternalServerError
+		})?;
 
 		let mut claims = BTreeMap::new();
 		claims.insert("session_id", session_id);
 		claims.insert("user_type", user_type.to_string());
 
-		let token = claims
-			.sign_with_key(&key)
-			.map_err(|e| format!("Error creating jwt token : {e}"))?;
+		let token = claims.sign_with_key(&key).map_err(|e| {
+			eprintln!("Error creating jwt token : {e}");
+			Status::InternalServerError
+		})?;
 
-		Ok(token)
+		Ok(Some(token))
 	}
 
 	pub fn can_access_admin_pages(&self) -> bool {

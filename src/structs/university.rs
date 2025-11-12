@@ -1,14 +1,11 @@
-use uuid::Uuid;
+use rocket::http::Status;
 
 use crate::{
 	traits::db::Db,
-	utils::{generate_password, hash_password, verify_password},
+	utils::{hash_password, verify_password},
 };
 
-use super::{
-	class::{Class, ClassDto, TryFromVecClassDtoToClassVec},
-	internship::{Internship, InternshipDto, TryFromVecInternshipDtoToInternshipVec},
-};
+use super::{class::Class, internship::Internship};
 
 #[derive(Debug)]
 pub struct University {
@@ -21,40 +18,9 @@ pub struct University {
 	pub intership_list: Vec<Internship>,
 }
 
-#[derive(Debug, FromForm)]
-pub struct UniversityDto {
-	pub login: String,
-	pub name: String,
-	pub mail: String,
-	pub class_list: Vec<ClassDto>,
-	pub intership_list: Vec<InternshipDto>,
-}
-
-impl TryFrom<UniversityDto> for University {
-	type Error = ();
-
-	fn try_from(value: UniversityDto) -> Result<Self, Self::Error> {
-		let class_list = Vec::<Class>::try_from_classdto_vec_to_class_vec(value.class_list)?;
-		let intership_list =
-			Vec::<Internship>::try_from_internshipdto_vec_to_internship_vec(value.intership_list)?;
-
-		let password = generate_password().map_err(|_| ())?;
-
-		Ok(Self {
-			id: Uuid::new_v4().to_string(),
-			login: value.login,
-			password,
-			name: value.name,
-			mail: value.mail,
-			class_list,
-			intership_list,
-		})
-	}
-}
-
 #[async_trait]
 impl Db for University {
-	async fn insert(&self) -> Result<String, String> {
+	async fn insert(&self) -> Result<(), Status> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
 
@@ -70,24 +36,31 @@ impl Db for University {
 				],
 			)
 			.await
-			.map_err(|e| format!("INSERT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("Error during insert of university {}: {e}", self.name);
+				Status::InternalServerError
+			})?;
 
-		Ok(format!(
-			"Values {}, {}, {}, {password_hash} (encoded password) inserted with id {}",
-			self.name, self.mail, self.login, self.id
-		))
+		Ok(())
 	}
 
-	async fn login(login: &str, password: &str) -> Result<Self, String>
+	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
 	where
 		Self: Sized,
 	{
 		let client = Self::setup_database().await?;
 
 		let row = client
-			.query_one("SELECT password from university WHERE login=$1", &[&login])
+			.query_opt("SELECT password from university WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("SELECT University password error: {e}");
+				Status::InternalServerError
+			})?;
+
+		let Some(row) = row else {
+			return Ok(None);
+		};
 
 		let hashed_password: String = row.get(0);
 
@@ -98,7 +71,10 @@ impl Db for University {
 					&[&login],
 				)
 				.await
-				.map_err(|e| format!("SELECT error: {e}"))?;
+				.map_err(|e| {
+					eprintln!("SELECT University infos error: {e}");
+					Status::InternalServerError
+				})?;
 
 			let id: String = row.get(0);
 			let name: String = row.get(1);
@@ -115,15 +91,15 @@ impl Db for University {
 				class_list: vec![],     //WIP
 				intership_list: vec![], //WIP
 			};
-			Ok(university)
+			Ok(Some(university))
 		} else {
-			Err("password incorrect".to_string())
+			Ok(None)
 		}
 	}
 }
 
 impl University {
-	pub async fn from_id(id: &str) -> Result<Self, String> {
+	pub async fn from_id(id: &str) -> Result<Self, Status> {
 		let client = Self::setup_database().await?;
 
 		let row = client
@@ -132,7 +108,10 @@ impl University {
 				&[&id],
 			)
 			.await
-			.map_err(|e| format!("SELECT error: {e}"))?;
+			.map_err(|e| {
+				eprintln!("SELECT error: {e}");
+				Status::InternalServerError
+			})?;
 
 		let name: String = row.get(0);
 		let login: String = row.get(1);

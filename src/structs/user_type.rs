@@ -1,6 +1,10 @@
 use std::{fmt::Display, str::FromStr};
 
-#[derive(Debug, PartialEq, Eq)]
+use rocket::http::Status;
+use serde::Serialize;
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum UserType {
 	Admin,
 	University,
@@ -20,7 +24,7 @@ impl Display for UserType {
 }
 
 impl FromStr for UserType {
-	type Err = String;
+	type Err = Status;
 
 	fn from_str(value: &str) -> Result<Self, Self::Err> {
 		match value {
@@ -28,7 +32,7 @@ impl FromStr for UserType {
 			"university" => Ok(Self::University),
 			"student" => Ok(Self::Student),
 			"company" => Ok(Self::Company),
-			_ => Err("Incorrect UserType".to_string()),
+			_ => Err(Status::InternalServerError),
 		}
 	}
 }
