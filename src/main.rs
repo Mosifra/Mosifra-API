@@ -2,7 +2,6 @@ use std::{env, process::exit};
 
 use rocket::{Config, http::Method};
 use rocket_cors::{AllowedOrigins, CorsOptions};
-use routes::{login, user};
 
 pub mod redis;
 pub mod routes;

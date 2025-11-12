@@ -1,20 +1,14 @@
 use std::str::FromStr;
 
 use rocket::form::Form;
-use serde_json::json;
 
 use crate::{
-	structs::{
-		company::Company, jwt::UserJwt, student::Student, university::University,
-		user_type::UserType,
-	},
+	structs::{company::Company, student::Student, university::University, user_type::UserType},
 	traits::db::Db,
 	utils::set_transaction_id,
 };
 
-use crate::redis;
-
-use super::domain::{Jwt, Login};
+use super::domain::Login;
 
 #[post("/login", data = "<form>")]
 #[allow(clippy::needless_pass_by_value)]

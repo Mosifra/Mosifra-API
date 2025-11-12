@@ -2,7 +2,7 @@ use redis::{Connection, TypedCommands};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::routes::login::Twofa;
+use crate::routes::login_flow::domain::Twofa;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LoginTransaction {
