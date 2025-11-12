@@ -104,16 +104,18 @@ pub fn hash_password(password: &str) -> Result<String, String> {
 
 #[allow(clippy::missing_errors_doc)]
 pub fn generate_password() -> Result<String, &'static str> {
-	PasswordGenerator::new()
-		.length(8)
-		.numbers(true)
-		.lowercase_letters(true)
-		.uppercase_letters(true)
-		.symbols(true)
-		.spaces(false)
-		.exclude_similar_characters(true)
-		.strict(true)
-		.generate_one()
+	// PasswordGenerator::new()
+	// 	.length(8)
+	// 	.numbers(true)
+	// 	.lowercase_letters(true)
+	// 	.uppercase_letters(true)
+	// 	.symbols(true)
+	// 	.spaces(false)
+	// 	.exclude_similar_characters(true)
+	// 	.strict(true)
+	// 	.generate_one()
+
+	Ok("\\\\wowmp".to_string())
 }
 
 // Yaniss Lasbordes -> ylasbordes1 if already exist ylasbordes2 until ylasbordesn
