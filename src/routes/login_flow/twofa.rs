@@ -6,6 +6,7 @@ use uuid::Uuid;
 use crate::{
 	redis::{self, SessionData, get_user_id_from_twofa},
 	structs::{jwt::UserJwt, user_type::UserType},
+	traits::status::StatusOptionHandling,
 };
 
 use super::domain::{TwofaPayload, TwofaResponse};
@@ -38,10 +39,7 @@ pub fn twofa(twofa_payload: Json<TwofaPayload>) -> Result<Json<TwofaResponse>, S
 		let jwt =
 			UserJwt::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?;
 
-		let Some(jwt) = jwt else {
-			eprintln!("JWT is somehow not valid");
-			return Err(Status::InternalServerError);
-		};
+		let jwt = jwt.internal_server_error("JWT is somehow not valid")?;
 
 		Ok(Json(TwofaResponse {
 			valid: true,

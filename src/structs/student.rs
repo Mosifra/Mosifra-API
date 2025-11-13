@@ -3,7 +3,7 @@ use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
-	traits::db::Db,
+	traits::{db::Db, status::StatusResultHandling},
 	utils::{generate_login, generate_password, hash_password, verify_password},
 };
 
@@ -61,7 +61,7 @@ impl Db for Student {
             &[&id, &self.first_name, &self.last_name, &self.login, &password_hash, &self.mail],
         )
         .await
-        .map_err(|e| {eprintln!("INSERT student Error: {e}"); Status::InternalServerError})?;
+        .internal_server_error("INSERT student Error")?;
 
 		Ok(())
 	}
@@ -75,10 +75,7 @@ impl Db for Student {
 		let row = client
 			.query_one("SELECT password from student WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| {
-				eprintln!("SELECT error: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("SELECT error")?;
 
 		let hashed_password: String = row.get(0);
 
@@ -89,10 +86,7 @@ impl Db for Student {
 					&[&login],
 				)
 				.await
-				.map_err(|e| {
-					eprintln!("SELECT error: {e}");
-					Status::InternalServerError
-				})?;
+				.internal_server_error("SELECT error")?;
 
 			let id: String = row.get(0);
 			let first_name: String = row.get(1);

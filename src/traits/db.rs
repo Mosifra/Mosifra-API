@@ -1,22 +1,17 @@
 use rocket::http::Status;
 use tokio_postgres::{Client, NoTls};
 
+use super::status::StatusResultHandling;
+
 pub async fn setup_database() -> Result<Client, Status> {
-	let database_url = std::env::var("DATABASE_URL").map_err(|_| {
-		eprintln!("DATABASE_URL missing");
-		Status::InternalServerError
-	})?;
+	let database_url =
+		std::env::var("DATABASE_URL").internal_server_error("DATABASE_URL missing")?;
 	let (client, connection) = tokio_postgres::connect(&database_url, NoTls)
 		.await
-		.map_err(|e| {
-			eprintln!("Error connection to prostgres failed: {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Error connection to prostgres failed")?;
 
 	tokio::spawn(async move {
-		if let Err(e) = connection.await {
-			eprintln!("Connection error: {e}");
-		}
+		connection.await.internal_server_error("Connection error");
 	});
 	Ok(client)
 }
@@ -45,10 +40,7 @@ pub async fn is_login_taken(username: &str) -> Result<bool, Status> {
 	let row = client
 		.query_opt("SELECT 1 FROM student WHERE login=$1;", &[&username])
 		.await
-		.map_err(|e| {
-			eprintln!("Error during selection of login to check if login is taken : {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Error during selection of login to check if login is taken")?;
 
 	Ok(row.is_some())
 }

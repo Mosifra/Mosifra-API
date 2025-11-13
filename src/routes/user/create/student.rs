@@ -1,6 +1,9 @@
 use rocket::{Data, data::ToByteUnit, http::Status, serde::json::Json};
 
-use crate::{structs::student::Student, traits::db::Db};
+use crate::{
+	structs::student::Student,
+	traits::{db::Db, status::StatusResultHandling},
+};
 
 use super::domain::StudentCsvResponse;
 
@@ -8,10 +11,11 @@ use super::domain::StudentCsvResponse;
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn student_csv(data: Data<'_>) -> Result<Json<StudentCsvResponse>, Status> {
-	let data = data.open(2.mebibytes()).into_string().await.map_err(|e| {
-		eprintln!("Error while reading data: {e}");
-		Status::InternalServerError
-	})?;
+	let data = data
+		.open(2.mebibytes())
+		.into_string()
+		.await
+		.internal_server_error("Error while reading data")?;
 
 	let mut reader = csv::Reader::from_reader(data.value.as_bytes());
 	for result in reader.records() {

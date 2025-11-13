@@ -1,7 +1,7 @@
 use rocket::http::Status;
 
 use crate::{
-	traits::db::Db,
+	traits::{db::Db, status::StatusResultHandling},
 	utils::{hash_password, verify_password},
 };
 
@@ -36,10 +36,7 @@ impl Db for University {
 				],
 			)
 			.await
-			.map_err(|e| {
-				eprintln!("Error during insert of university {}: {e}", self.name);
-				Status::InternalServerError
-			})?;
+			.internal_server_error("Error during insert of university")?;
 
 		Ok(())
 	}
@@ -53,10 +50,7 @@ impl Db for University {
 		let row = client
 			.query_opt("SELECT password from university WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| {
-				eprintln!("SELECT University password error: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("SELECT University password error")?;
 
 		let Some(row) = row else {
 			return Ok(None);
@@ -71,10 +65,7 @@ impl Db for University {
 					&[&login],
 				)
 				.await
-				.map_err(|e| {
-					eprintln!("SELECT University infos error: {e}");
-					Status::InternalServerError
-				})?;
+				.internal_server_error("SELECT University infos error")?;
 
 			let id: String = row.get(0);
 			let name: String = row.get(1);
@@ -108,10 +99,7 @@ impl University {
 				&[&id],
 			)
 			.await
-			.map_err(|e| {
-				eprintln!("SELECT error: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("SELECT error")?;
 
 		let name: String = row.get(0);
 		let login: String = row.get(1);

@@ -2,7 +2,10 @@ use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
-	traits::db::{Db, DbCompany},
+	traits::{
+		db::{Db, DbCompany},
+		status::StatusResultHandling,
+	},
 	utils::{hash_password, verify_password},
 };
 
@@ -31,10 +34,7 @@ impl Db for Company {
 				&[&id, &self.name, &self.login, &password_hash, &self.mail],
 			)
 			.await
-			.map_err(|e| {
-				eprintln!("Error during company insert: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("Error during company insert")?;
 
 		Ok(())
 	}
@@ -48,10 +48,7 @@ impl Db for Company {
 		let row = client
 			.query_one("SELECT password from company WHERE login=$1", &[&login])
 			.await
-			.map_err(|e| {
-				eprintln!("SELECT error: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("SELECT error")?;
 
 		let hashed_password: String = row.get(0);
 
@@ -62,10 +59,7 @@ impl Db for Company {
 					&[&login],
 				)
 				.await
-				.map_err(|e| {
-					eprintln!("SELECT error: {e}");
-					Status::InternalServerError
-				})?;
+				.internal_server_error("SELECT error")?;
 
 			let id: String = row.get(0);
 			let name: String = row.get(1);
@@ -97,15 +91,11 @@ impl DbCompany for Company {
 		let row = client
 			.query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
 			.await
-			.map_err(|e| {
-				eprintln!("SELECT error: {e}");
-				Status::InternalServerError
-			})?;
+			.internal_server_error("SELECT error")?;
 
-		let res: String = row.try_get(0).map_err(|e| {
-			eprintln!("Error while trying to get name of company : {e}");
-			Status::InternalServerError
-		})?;
+		let res: String = row
+			.try_get(0)
+			.internal_server_error("Error while trying to get name of company")?;
 		Ok(res)
 	}
 }

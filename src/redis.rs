@@ -3,7 +3,10 @@ use rocket::http::Status;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::routes::login_flow::domain::TwofaPayload;
+use crate::{
+	routes::login_flow::domain::TwofaPayload,
+	traits::status::{StatusOptionHandling, StatusResultHandling},
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LoginTransaction {
@@ -17,14 +20,11 @@ pub struct SessionData {
 }
 
 fn setup_redis() -> Result<Connection, Status> {
-	let client = redis::Client::open("redis://default:redis_password@redis/").map_err(|e| {
-		eprintln!("Error failed to connect to redis : {e}");
-		Status::InternalServerError
-	})?;
-	client.get_connection().map_err(|e| {
-		eprintln!("Error failed to get connection : {e}");
-		Status::InternalServerError
-	})
+	let client = redis::Client::open("redis://default:redis_password@redis/")
+		.internal_server_error("Error failed to connect to redis")?;
+	client
+		.get_connection()
+		.internal_server_error("Error failed to get connection")
 }
 
 pub fn get_transactionid(user_id: &str, code: String) -> Result<String, Status> {
@@ -35,16 +35,10 @@ pub fn get_transactionid(user_id: &str, code: String) -> Result<String, Status> 
 		user_id: user_id.to_string(),
 		code,
 	})
-	.map_err(|e| {
-		eprintln!("Error failed to deserialize LoginTransaction : {e}");
-		Status::InternalServerError
-	})?;
+	.internal_server_error("Error failed to deserialize LoginTransaction")?;
 
 	con.set_ex(format!("login:{transaction_id}"), value, 900)
-		.map_err(|e| {
-			eprintln!("Error failed to set login:transaction to redis : {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Error failed to set login:transaction to redis")?;
 
 	Ok(transaction_id.to_string())
 }
@@ -54,16 +48,11 @@ pub fn check_2fa_code(twofa: &TwofaPayload) -> Result<bool, Status> {
 
 	let val = con
 		.get(format!("login:{}", twofa.transaction_id))
-		.map_err(|e| {
-			eprintln!("Failed to get login:transaction_id from redis : {e}");
-			Status::InternalServerError
-		})?
-		.unwrap_or_default();
+		.internal_server_error("Failed to get login:transaction_id from redis")?
+		.internal_server_error("Transaction id is empty")?;
 
-	let check: LoginTransaction = serde_json::from_str(&val).map_err(|e| {
-		eprintln!("Failed to deserialize LoginTransaction : {e}");
-		Status::InternalServerError
-	})?;
+	let check: LoginTransaction = serde_json::from_str(&val)
+		.internal_server_error("Failed to deserialize LoginTransaction")?;
 
 	Ok(check.code == twofa.code)
 }
@@ -72,10 +61,7 @@ pub fn invalidate_transactionid(twofa: &TwofaPayload) -> Result<(), Status> {
 	let mut con = setup_redis()?;
 
 	con.del(format!("login:{}", twofa.transaction_id))
-		.map_err(|e| {
-			eprintln!("Failed to delete login:transaction_id from redis : {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Failed to delete login:transaction_id from redis")?;
 
 	Ok(())
 }
@@ -85,20 +71,16 @@ pub fn get_user_id_from_twofa(twofa: &TwofaPayload) -> Result<String, Status> {
 
 	let val = con
 		.get(format!("login:{}", twofa.transaction_id))
-		.map_err(|e| {
-			eprintln!("Error while trying to get user_id from twofa: {e}");
-			Status::InternalServerError
-		})?
-		.unwrap_or_default();
+		.internal_server_error("Error while trying to get user_id from twofa")?
+		.internal_server_error("Transaction id is empty")?;
 
 	if val.is_empty() {
 		return Ok(val);
 	}
 
-	let check: LoginTransaction = serde_json::from_str(&val).map_err(|e| {
-		eprintln!("Error while trying to convert user_id from redis to LoginTransaction: {e}");
-		Status::InternalServerError
-	})?;
+	let check: LoginTransaction = serde_json::from_str(&val).internal_server_error(
+		"Error while trying to convert user_id from redis to LoginTransaction",
+	)?;
 
 	Ok(check.user_id)
 }
@@ -114,10 +96,7 @@ pub fn set_session(
 		Status::InternalServerError
 	})?;
 	con.set_ex(format!("session:{session_id}"), session_data, ttl_seconds)
-		.map_err(|e| {
-			eprintln!("Failed to set session:session_id to redis : {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Failed to set session:session_id to redis")?;
 
 	Ok(())
 }
@@ -125,28 +104,20 @@ pub fn set_session(
 pub fn invalidate_session(session_id: &str) -> Result<(), Status> {
 	let mut con = setup_redis()?;
 
-	con.del(format!("session:{session_id}")).map_err(|e| {
-		eprintln!("Failed to delete session:session_id from redis : {e}");
-		Status::InternalServerError
-	})?;
+	con.del(format!("session:{session_id}"))
+		.internal_server_error("Failed to delete session:session_id from redis")?;
 
 	Ok(())
 }
 
 pub fn get_user_id_from_session_id(session_id: String) -> Result<String, Status> {
 	let mut con = setup_redis()?;
-	let line = con.get(session_id).map_err(|e| {
-		eprintln!("Error while getting line : {e}");
-		Status::InternalServerError
-	})?;
-	let Some(line) = line else {
-		eprintln!("No volue found to get user_id from session_id");
-		return Err(Status::InternalServerError);
-	};
-	let session_data: SessionData = serde_json::from_str(&line).map_err(|e| {
-		eprintln!("Error while deserializing session data: {e}");
-		Status::InternalServerError
-	})?;
+	let line = con
+		.get(session_id)
+		.internal_server_error("Error while getting line")?;
+	let line = line.internal_server_error("No value found to get user_id from session_id")?;
+	let session_data: SessionData = serde_json::from_str(&line)
+		.internal_server_error("Error while deserializing session data")?;
 
 	Ok(session_data.user_id)
 }
@@ -154,10 +125,9 @@ pub fn get_user_id_from_session_id(session_id: String) -> Result<String, Status>
 pub fn session_exist(session_id: &str) -> Result<bool, Status> {
 	let mut con = setup_redis()?;
 
-	let res = con.get(format!("session:{session_id}")).map_err(|e| {
-		eprintln!("Failed to get session:session_id from redis : {e}");
-		Status::InternalServerError
-	})?;
+	let res = con
+		.get(format!("session:{session_id}"))
+		.internal_server_error("Failed to get session:session_id from redis")?;
 
 	Ok(res.is_some())
 }

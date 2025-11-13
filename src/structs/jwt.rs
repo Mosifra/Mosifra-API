@@ -5,7 +5,9 @@ use jwt::{SignWithKey, VerifyWithKey};
 use rocket::http::Status;
 use sha2::Sha256;
 
-use crate::{redis::session_exist, structs::user_type::UserType};
+use crate::{
+	redis::session_exist, structs::user_type::UserType, traits::status::StatusResultHandling,
+};
 
 #[derive(Debug)]
 pub struct UserJwt {
@@ -22,15 +24,12 @@ impl UserJwt {
 			},
 			|secret| secret,
 		);
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes()).map_err(|e| {
-			eprintln!("Error getting key from JWT secret : {e}");
-			Status::InternalServerError
-		})?;
+		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
+			.internal_server_error("Error getting key from JWT secret")?;
 
-		let claims: BTreeMap<String, String> = raw_jwt.verify_with_key(&key).map_err(|e| {
-			eprintln!("Error getting claims on jwt token : {e}");
-			Status::InternalServerError
-		})?;
+		let claims: BTreeMap<String, String> = raw_jwt
+			.verify_with_key(&key)
+			.internal_server_error("Error getting claims on jwt token")?;
 
 		let user_type = match claims["user_type"].as_str() {
 			"admin" => UserType::Admin,
@@ -68,19 +67,16 @@ impl UserJwt {
 			|secret| secret,
 		);
 
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes()).map_err(|e| {
-			eprintln!("Error getting key from JWT secret : {e}");
-			Status::InternalServerError
-		})?;
+		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
+			.internal_server_error("Error getting key from JWT secret")?;
 
 		let mut claims = BTreeMap::new();
 		claims.insert("session_id", session_id);
 		claims.insert("user_type", user_type.to_string());
 
-		let token = claims.sign_with_key(&key).map_err(|e| {
-			eprintln!("Error creating jwt token : {e}");
-			Status::InternalServerError
-		})?;
+		let token = claims
+			.sign_with_key(&key)
+			.internal_server_error("Error creating jwt token")?;
 
 		Ok(Some(token))
 	}

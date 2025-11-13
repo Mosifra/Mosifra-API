@@ -19,7 +19,10 @@ use crate::{
 	redis::get_transactionid,
 	routes::login_flow::domain::LoginResponse,
 	structs::student::Student,
-	traits::db::{Db, is_login_taken},
+	traits::{
+		db::{Db, is_login_taken},
+		status::{StatusOptionHandling, StatusResultHandling},
+	},
 };
 
 #[must_use]
@@ -28,14 +31,12 @@ use crate::{
 	clippy::result_unit_err,
 	clippy::missing_errors_doc
 )] // WIP
-pub fn verify_mail(mail: &str) -> bool {
-	// Should never crash
-	#[allow(clippy::unwrap_used)]
+pub fn verify_mail(mail: &str) -> Result<bool, Status> {
 	let regex = Regex::new(
             r#"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"#,
-        ).unwrap();
+        ).internal_server_error("Failed to build email string")?;
 
-	regex.is_match(mail)
+	Ok(regex.is_match(mail))
 }
 
 #[allow(
@@ -43,15 +44,18 @@ pub fn verify_mail(mail: &str) -> bool {
 	clippy::result_unit_err,
 	clippy::missing_errors_doc
 )] // WIP
-pub async fn send_2fa_mail(to: &str) -> Result<String, Status> {
+pub fn send_2fa_mail(to: &str) -> Result<String, Status> {
 	let mut code = vec![];
 
 	let mut rng = rand::rng();
 	for _ in 1..=6 {
 		let mut nums: Vec<i32> = (0..=9).collect();
 		nums.shuffle(&mut rng);
-		#[allow(clippy::unwrap_used)] // Should never crash
-		code.push(nums.choose(&mut rng).unwrap().to_string());
+		code.push(
+			nums.choose(&mut rng)
+				.internal_server_error("Failed to choose number rng")?
+				.to_string(),
+		);
 	}
 
 	let code = code.join("");
@@ -59,52 +63,37 @@ pub async fn send_2fa_mail(to: &str) -> Result<String, Status> {
 	let email = Message::builder()
 		.from(Mailbox::new(
 			None,
-			"mosifratest@gmail.com".parse().map_err(|e| {
-				eprintln!("Error while parsing 'from' email : {e}");
-				Status::InternalServerError
-			})?,
+			"mosifratest@gmail.com"
+				.parse()
+				.internal_server_error("Error while parsing 'from' email")?,
 		))
 		.to(Mailbox::new(
 			None,
-			to.parse().map_err(|e| {
-				eprintln!("Error while parsing 'to' email : {e}");
-				Status::InternalServerError
-			})?,
+			to.parse()
+				.internal_server_error("Error while parsing 'to' email")?,
 		))
 		.header(ContentType::TEXT_PLAIN)
 		.body(code.clone())
-		.map_err(|e| {
-			eprintln!("Error while building email : {e}");
-			Status::InternalServerError
-		})?;
+		.internal_server_error("Error while building email")?;
 
 	let creds = Credentials::new("mosifratest".to_owned(), "vftf jnbn peix uqvt".to_owned()); // need to go in .env
 
 	let mailer = SmtpTransport::relay("smtp.gmail.com")
-		.map_err(|e| {
-			eprintln!("{e}");
-			Status::InternalServerError
-		})?
+		.internal_server_error_no_message()?
 		.credentials(creds)
 		.build();
 
-	match mailer.send(&email) {
-		Ok(_) => println!("Email sent successfully!"),
-		Err(e) => {
-			eprintln!("Error email failed to send : {e}");
-			return Err(Status::InternalServerError);
-		}
-	}
+	mailer
+		.send(&email)
+		.internal_server_error("Error email failed to send")?;
 
 	Ok(code)
 }
 
 #[allow(clippy::missing_errors_doc)]
 pub fn verify_password(pwd_to_check: &str, stored_hash: &str) -> Result<bool, Status> {
-	let parsed_hash = PasswordHash::new(stored_hash).map_err(|e| {
-		eprintln!("Erreur parsing hash: {e}");
-		Status::InternalServerError
-	})?;
+	let parsed_hash =
+		PasswordHash::new(stored_hash).internal_server_error("Erreur parsing hash")?;
 	let is_correct = Argon2::default()
 		.verify_password(pwd_to_check.as_bytes(), &parsed_hash)
 		.map(|()| true);
@@ -120,10 +109,7 @@ pub fn hash_password(password: &str) -> Result<String, Status> {
 
 	let password_hash = argon2
 		.hash_password(bytes_password, &salt)
-		.map_err(|e| {
-			eprintln!("Error while tryinng to hash password {e}");
-			Status::InternalServerError
-		})?
+		.internal_server_error("Error while tryinng to hash password")?
 		.to_string();
 
 	Ok(password_hash)
@@ -141,10 +127,7 @@ pub fn generate_password() -> Result<String, Status> {
 		.exclude_similar_characters(true)
 		.strict(true)
 		.generate_one()
-		.map_err(|e| {
-			eprintln!("Error while generating password : {e}");
-			Status::InternalServerError
-		})
+		.internal_server_error("Error while generating password")
 }
 
 // Yaniss Lasbordes -> ylasbordes1 if already exist ylasbordes2 until ylasbordesn
@@ -152,10 +135,10 @@ pub fn generate_password() -> Result<String, Status> {
 pub async fn generate_login(first_name: &str, last_name: &str) -> Result<String, Status> {
 	let first_name = first_name.to_lowercase();
 	let last_name = last_name.to_lowercase();
-	let Some(first_name_letter) = first_name.chars().next() else {
-		eprintln!("Login generation error : login is empty");
-		return Err(Status::InternalServerError);
-	};
+	let first_name_letter = first_name
+		.chars()
+		.next()
+		.internal_server_error("Login generation error : login is empty")?;
 	let mut res;
 	let mut i = 1;
 
@@ -171,10 +154,11 @@ pub async fn generate_login(first_name: &str, last_name: &str) -> Result<String,
 }
 
 pub async fn read_csv(file_path: PathBuf) -> Result<(), Status> {
-	let mut reader = csv::Reader::from_path(file_path).unwrap();
+	let mut reader =
+		csv::Reader::from_path(file_path).internal_server_error("Failed to creatre reader")?;
 
 	for result in reader.records() {
-		let record = result.unwrap();
+		let record = result.internal_server_error("Failed to read string record")?;
 
 		let student = Student::from_record(record).await?;
 		student.insert().await?;
@@ -188,7 +172,7 @@ pub async fn set_transaction_id(
 	id: &str,
 	remember_me: bool,
 ) -> Result<Json<LoginResponse>, Status> {
-	let code = send_2fa_mail(mail).await?;
+	let code = send_2fa_mail(mail)?;
 	let transaction_id = get_transactionid(id, code)?;
 	Ok(Json(LoginResponse {
 		valid: true,
