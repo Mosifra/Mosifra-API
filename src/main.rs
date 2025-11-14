@@ -20,11 +20,6 @@ use routes::user::create::student::student_csv;
 use routes::user::create::university::create_university;
 use routes::user::get::user_type::get_user_type;
 
-#[options("/<path..>")]
-fn cors_preflight(path: std::path::PathBuf) -> &'static str {
-    ""
-}
-
 #[launch]
 fn rocket() -> _ {
 	match dotenvy::dotenv() {
@@ -68,7 +63,6 @@ fn rocket() -> _ {
 				student_csv,
 				create_university,
 				get_user_type,
-				cors_preflight
 			],
 		)
 		.attach(cors.to_cors().unwrap())
