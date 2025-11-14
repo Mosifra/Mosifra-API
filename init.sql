@@ -66,3 +66,5 @@ CREATE TABLE university_internship (
     internship_id VARCHAR(128) REFERENCES internship(id) ON DELETE RESTRICT,
     PRIMARY KEY (university_id, internship_id)
 );
+
+INSERT INTO course_type (name) VALUES ('info'); -- 0

@@ -15,6 +15,7 @@ pub async fn create_university(
 	println!("==========DEBUG==========");
 	println!("login : {}", university.login);
 	println!("password : {}", university.password);
+	println!("id : {}", university.id);
 	println!("==========DEBUG==========");
 
 	if verify_mail(&university.mail)? {

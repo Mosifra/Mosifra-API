@@ -15,6 +15,7 @@ extern crate rocket;
 use routes::login_flow::login::login;
 use routes::login_flow::twofa::twofa;
 use routes::session::session::check_session;
+use routes::user::create::class::create_class;
 use routes::user::create::company::create_company;
 use routes::user::create::student::student_csv;
 use routes::user::create::university::create_university;
@@ -63,6 +64,7 @@ fn rocket() -> _ {
 				student_csv,
 				create_university,
 				get_user_type,
+				create_class,
 			],
 		)
 		.attach(cors.to_cors().unwrap())

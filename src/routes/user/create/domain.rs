@@ -1,11 +1,12 @@
 // Company
 
-use rocket::{Data, fs::TempFile, http::Status};
+use chrono::NaiveDate;
+use rocket::{fs::TempFile, http::Status};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-	structs::{company::Company, university::University},
+	structs::{company::Company, course_type::CourseType, university::University},
 	utils::generate_password,
 };
 
@@ -80,5 +81,23 @@ impl TryFrom<CreateUniversityPayload> for University {
 
 #[derive(Debug, Serialize)]
 pub struct CreateUniversityResponse {
+	pub success: bool,
+}
+
+// Class
+
+#[derive(Debug, Deserialize)]
+pub struct CreateClassPayload {
+	pub name: String,
+	pub course_type: CourseType,
+	pub date_internship_start: NaiveDate,
+	pub date_internship_end: NaiveDate,
+	pub maximum_internship_length: i32,
+	pub minimum_internship_length: i32,
+	pub university_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CreateClassResponse {
 	pub success: bool,
 }

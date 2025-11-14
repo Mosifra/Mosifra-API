@@ -11,7 +11,7 @@ pub async fn setup_database() -> Result<Client, Status> {
 		.internal_server_error("Error connection to prostgres failed")?;
 
 	tokio::spawn(async move {
-		connection.await.internal_server_error("Connection error");
+		let _ = connection.await.internal_server_error("Connection error");
 	});
 	Ok(client)
 }
@@ -25,6 +25,7 @@ pub trait Db {
 
 	async fn insert(&self) -> Result<(), Status>;
 
+	#[allow(unused_variables)]
 	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
 	where
 		Self: Sized,
@@ -32,6 +33,7 @@ pub trait Db {
 		unimplemented!("Only for structs that represents users")
 	}
 
+	#[allow(unused_variables)]
 	async fn get_name(&self, user_id: String) -> Result<String, Status> {
 		unimplemented!("For Company struct only")
 	}
