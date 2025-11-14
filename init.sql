@@ -20,8 +20,8 @@ CREATE TABLE class (
     course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
     start_date DATE,
     end_date DATE,
-    min_size INT,
-    max_size INT,
+    min_length INT, -- Minimum stage length in weeks
+    max_length INT, -- Maximum stage length in weeks
     university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT
 );
 
