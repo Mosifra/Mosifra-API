@@ -17,7 +17,7 @@ pub async fn create_university(
 	println!("password : {}", university.password);
 	println!("==========DEBUG==========");
 
-	if verify_mail(&university.mail) {
+	if verify_mail(&university.mail)? {
 		println!("correct mail");
 	} else {
 		println!("incorrect mail");

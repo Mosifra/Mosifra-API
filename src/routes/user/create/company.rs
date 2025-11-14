@@ -13,7 +13,7 @@ pub async fn create_company(
 	let company = Company::try_from(create_company_payload.into_inner())?;
 	println!("{company:#?}");
 
-	if verify_mail(&company.mail) {
+	if verify_mail(&company.mail)? {
 		println!("correct mail");
 	} else {
 		println!("incorrect mail");
