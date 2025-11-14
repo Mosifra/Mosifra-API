@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::structs::user_type::UserType;
 
+// user_type
+
 #[derive(Debug, Deserialize)]
 pub struct GetUserTypePayload {
 	pub jwt: String,

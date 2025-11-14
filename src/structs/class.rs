@@ -3,11 +3,15 @@ use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
+	redis,
 	routes::user::create::domain::CreateClassPayload,
-	traits::{db::Db, status::StatusResultHandling},
+	traits::{
+		db::Db,
+		status::{StatusOptionHandling, StatusResultHandling},
+	},
 };
 
-use super::course_type::CourseType;
+use super::{course_type::CourseType, jwt::UserJwt, university};
 
 // For now
 #[allow(dead_code)]
@@ -27,6 +31,10 @@ impl TryFrom<CreateClassPayload> for Class {
 	type Error = Status;
 
 	fn try_from(value: CreateClassPayload) -> Result<Self, Self::Error> {
+		let jwt = UserJwt::from_raw_jwt(&value.jwt)?.internal_server_error("Jwt is empty")?;
+		let session_id = jwt.session_id;
+		let university_id = redis::get_user_id_from_session_id(session_id)?;
+
 		Ok(Self {
 			id: Uuid::new_v4().to_string(),
 			name: value.name,
@@ -35,7 +43,7 @@ impl TryFrom<CreateClassPayload> for Class {
 			date_internship_end: value.date_internship_end,
 			maximum_internship_length: value.maximum_internship_length,
 			minimum_internship_length: value.minimum_internship_length,
-			university_id: value.university_id,
+			university_id,
 		})
 	}
 }
