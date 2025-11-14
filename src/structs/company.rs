@@ -2,10 +2,7 @@ use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
-	traits::{
-		db::{Db, DbCompany},
-		status::StatusResultHandling,
-	},
+	traits::{db::Db, status::StatusResultHandling},
 	utils::{hash_password, verify_password},
 };
 
@@ -81,10 +78,7 @@ impl Db for Company {
 			Ok(None)
 		}
 	}
-}
 
-#[async_trait]
-impl DbCompany for Company {
 	async fn get_name(&self, user_id: String) -> Result<String, Status> {
 		let client = Self::setup_database().await?;
 

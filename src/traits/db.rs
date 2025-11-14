@@ -27,12 +27,14 @@ pub trait Db {
 
 	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
 	where
-		Self: Sized;
-}
+		Self: Sized,
+	{
+		unimplemented!("Only for structs that represents users")
+	}
 
-#[async_trait]
-pub trait DbCompany {
-	async fn get_name(&self, user_id: String) -> Result<String, Status>;
+	async fn get_name(&self, user_id: String) -> Result<String, Status> {
+		unimplemented!("For Company struct only")
+	}
 }
 
 pub async fn is_login_taken(username: &str) -> Result<bool, Status> {
