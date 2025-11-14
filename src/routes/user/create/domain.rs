@@ -1,6 +1,6 @@
 // Company
 
-use rocket::http::Status;
+use rocket::{Data, fs::TempFile, http::Status};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -39,6 +39,12 @@ pub struct CreateCompanyResponse {
 }
 
 // Student
+
+#[derive(Debug, FromForm)]
+pub struct StudentCsvPayload<'r> {
+	pub csv: TempFile<'r>,
+	pub class: String,
+}
 
 #[derive(Debug, Serialize)]
 pub struct StudentCsvResponse {
