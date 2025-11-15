@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::structs::user_type::UserType;
+use crate::models::auth::UserType;
 
 // user_type
 

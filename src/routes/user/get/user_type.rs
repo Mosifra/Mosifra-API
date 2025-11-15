@@ -1,6 +1,6 @@
 use rocket::{http::Status, serde::json::Json};
 
-use crate::structs::jwt::UserJwt;
+use crate::models::auth::UserJwt;
 
 use super::domain::{GetUserTypePayload, GetUserTypeResponse};
 

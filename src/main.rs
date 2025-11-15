@@ -2,24 +2,24 @@ use std::{env, process::exit};
 
 use rocket::{Config, http::Method};
 use rocket_cors::{AllowedOrigins, CorsOptions};
+use routes::{
+	auth::{check_session, login_route, twofa_route},
+	create::{
+		class::create_class, company::create_company, students::create_students,
+		university::create_university,
+	},
+	user::get::user_type::get_user_type,
+};
 
+mod error_handling;
+pub mod models;
+pub mod postgres;
 pub mod redis;
 pub mod routes;
-pub mod structs;
-pub mod traits;
 pub mod utils;
 
 #[macro_use]
 extern crate rocket;
-
-use routes::login_flow::login::login;
-use routes::login_flow::twofa::twofa;
-use routes::session::session::check_session;
-use routes::user::create::class::create_class;
-use routes::user::create::company::create_company;
-use routes::user::create::student::student_csv;
-use routes::user::create::university::create_university;
-use routes::user::get::user_type::get_user_type;
 
 #[launch]
 fn rocket() -> _ {
@@ -57,11 +57,11 @@ fn rocket() -> _ {
 		.mount(
 			"/",
 			routes![
-				login,
-				twofa,
+				login_route,
+				twofa_route,
 				check_session,
 				create_company,
-				student_csv,
+				create_students,
 				create_university,
 				get_user_type,
 				create_class,

@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-	routes::login_flow::domain::TwofaPayload,
-	traits::status::{StatusOptionHandling, StatusResultHandling},
+	error_handling::{StatusOptionHandling, StatusResultHandling},
+	routes::auth::TwofaPayload,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
