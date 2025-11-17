@@ -2,7 +2,12 @@ use std::{collections::BTreeMap, env, process::exit};
 
 use hmac::{Hmac, Mac};
 use jwt::{SignWithKey, VerifyWithKey};
-use rocket::{http::Status, serde::json::Json};
+use rocket::{
+	Request,
+	http::Status,
+	request::{FromRequest, Outcome},
+	serde::json::Json,
+};
 use sha2::Sha256;
 
 use crate::{
@@ -13,6 +18,52 @@ use crate::{
 };
 
 use super::UserType;
+
+#[derive(Debug)]
+pub struct AuthGuard;
+
+#[async_trait]
+impl<'r> FromRequest<'r> for AuthGuard {
+	type Error = String;
+
+	async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+		let auth_header = request.headers().get_one("Authorization");
+		match auth_header {
+			Some(header) if header.starts_with("Bearer ") => {
+				let token = header.trim_start_matches("Bearer ");
+				let is_correct = match validate_jwt(token.to_string()) {
+					Ok(is_correct) => is_correct,
+					Err(e) => {
+						return Outcome::Error((e, e.to_string()));
+					}
+				};
+				if is_correct {
+					Outcome::Success(AuthGuard)
+				} else {
+					Outcome::Error((Status::Unauthorized, "Invalid Token".to_string()))
+				}
+			}
+			_ => Outcome::Error((
+				Status::Unauthorized,
+				"Authorization header missing".to_string(),
+			)),
+		}
+	}
+}
+
+fn validate_jwt(jwt: String) -> Result<bool, Status> {
+	let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
+		|| {
+			eprintln!("JWT Secret must be in .env");
+			exit(1)
+		},
+		|secret| secret,
+	);
+	let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
+		.internal_server_error("Error getting key from JWT secret")?;
+
+	Ok(jwt.verify_with_key(&key).is_ok())
+}
 
 #[derive(Debug)]
 pub struct UserJwt {

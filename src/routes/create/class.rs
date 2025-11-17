@@ -1,6 +1,9 @@
 use rocket::{http::Status, serde::json::Json};
 
-use crate::{models::courses::Class, postgres::Db};
+use crate::{
+	models::{auth::AuthGuard, courses::Class},
+	postgres::Db,
+};
 
 use super::domain::{CreateClassPayload, CreateClassResponse};
 
@@ -8,6 +11,7 @@ use super::domain::{CreateClassPayload, CreateClassResponse};
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_class(
+	_auth: AuthGuard,
 	create_class_payload: Json<CreateClassPayload>,
 ) -> Result<Json<CreateClassResponse>, Status> {
 	let class = Class::try_from(create_class_payload.into_inner())?;

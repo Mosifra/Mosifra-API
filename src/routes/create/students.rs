@@ -3,7 +3,11 @@ use std::io::Cursor;
 use rocket::{form::Form, http::Status, serde::json::Json};
 use tokio::io::AsyncReadExt;
 
-use crate::{error_handling::StatusResultHandling, models::users::Student, postgres::Db};
+use crate::{
+	error_handling::StatusResultHandling,
+	models::{auth::AuthGuard, users::Student},
+	postgres::Db,
+};
 
 use super::domain::{StudentCsvPayload, StudentCsvResponse};
 
@@ -11,6 +15,7 @@ use super::domain::{StudentCsvPayload, StudentCsvResponse};
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_students(
+	_auth: AuthGuard,
 	student_csv_payload: Form<StudentCsvPayload<'_>>,
 ) -> Result<Json<StudentCsvResponse>, Status> {
 	let payload = student_csv_payload.into_inner();

@@ -97,7 +97,6 @@ pub struct CreateClassPayload {
 	pub date_internship_end: NaiveDate,
 	pub maximum_internship_length: i32,
 	pub minimum_internship_length: i32,
-	pub jwt: String,
 }
 
 #[derive(Debug, Serialize)]
