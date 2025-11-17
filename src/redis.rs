@@ -113,7 +113,7 @@ pub fn invalidate_session(session_id: &str) -> Result<(), Status> {
 pub fn get_user_id_from_session_id(session_id: String) -> Result<String, Status> {
 	let mut con = setup_redis()?;
 	let line = con
-		.get(session_id)
+		.get(format!("session:{session_id}"))
 		.internal_server_error("Error while getting line")?;
 	let line = line.internal_server_error("No value found to get user_id from session_id")?;
 	let session_data: SessionData = serde_json::from_str(&line)
