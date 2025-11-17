@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use chrono::NaiveDate;
 use rocket::http::Status;
+use serde::Serialize;
 use uuid::Uuid;
 
 use crate::{
@@ -16,7 +17,7 @@ use super::CourseType;
 
 // For now
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Class {
 	pub id: String,
 	pub name: String,

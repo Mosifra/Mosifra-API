@@ -7,7 +7,7 @@ use sha2::Sha256;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::users::Student,
+	models::{courses::get::domain::GetClassesResponse, users::Student},
 	redis::{self, session_exist},
 	routes::user::get::domain::GetInfoResponse,
 };
@@ -119,5 +119,16 @@ impl UserJwt {
 			university: Some(university.name),
 			class_name: Some(class.name),
 		}))
+	}
+
+	pub async fn get_classes(&self) -> Result<Json<GetClassesResponse>, Status> {
+		if self.user_type != UserType::University {
+			return Ok(Json(GetClassesResponse {
+            success: false,
+            classes: None,
+		}))
+		} else {
+			todo!("À finir")
+		}
 	}
 }

@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
 use rocket::http::Status;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CourseType {
 	Info,
