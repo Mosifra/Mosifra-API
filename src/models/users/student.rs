@@ -1,9 +1,5 @@
 use csv::StringRecord;
-use rocket::{
-	Request,
-	http::{Header, Status, hyper},
-	request::{FromRequest, Outcome},
-};
+use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{

@@ -11,10 +11,10 @@ use super::domain::{CreateClassPayload, CreateClassResponse};
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_class(
-	_auth: AuthGuard,
+	auth: AuthGuard,
 	create_class_payload: Json<CreateClassPayload>,
 ) -> Result<Json<CreateClassResponse>, Status> {
-	let class = Class::try_from(create_class_payload.into_inner())?;
+	let class = Class::try_from_payload(create_class_payload.into_inner(), auth.session_id)?;
 
 	let is_inserted = class.insert().await;
 

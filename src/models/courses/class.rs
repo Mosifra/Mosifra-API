@@ -6,17 +6,12 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::{
-	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::{auth::UserJwt, users::University},
-	postgres::Db,
-	redis,
+	error_handling::StatusResultHandling, models::users::University, postgres::Db, redis,
 	routes::create::domain::CreateClassPayload,
 };
 
 use super::CourseType;
 
-// For now
-#[allow(dead_code)]
 #[derive(Debug, Serialize)]
 pub struct Class {
 	pub id: String,
@@ -54,7 +49,7 @@ impl Class {
 		let minimum_internship_length = row.get(5);
 		let university_id = row.get(6);
 
-		Ok(Some(Class {
+		Ok(Some(Self {
 			id,
 			name,
 			course_type,
@@ -67,16 +62,10 @@ impl Class {
 	}
 
 	pub async fn get_university(&self) -> Result<University, Status> {
-		Ok(University::from_id(&self.university_id).await?)
+		University::from_id(&self.university_id).await
 	}
-}
 
-impl TryFrom<CreateClassPayload> for Class {
-	type Error = Status;
-
-	fn try_from(value: CreateClassPayload) -> Result<Self, Self::Error> {
-		let jwt = UserJwt::from_raw_jwt(&value.jwt)?.internal_server_error("Jwt is empty")?;
-		let session_id = jwt.session_id;
+	pub fn try_from_payload(value: CreateClassPayload, session_id: String) -> Result<Self, Status> {
 		let university_id = redis::get_user_id_from_session_id(session_id)?;
 
 		Ok(Self {

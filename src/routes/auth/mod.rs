@@ -3,7 +3,6 @@ mod login;
 mod session;
 mod twofa;
 
-pub use domain::CheckSessionPayload;
 pub use domain::CheckSessionResponse;
 pub use domain::LoginPayload;
 pub use domain::LoginResponse;

@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
 	error_handling::StatusOptionHandling,
-	models::auth::{UserJwt, UserType},
+	models::auth::{AuthGuard, UserType},
 	redis::{
 		SessionData, check_2fa_code, get_user_id_from_twofa, invalidate_transactionid, set_session,
 	},
@@ -39,9 +39,8 @@ pub fn twofa(twofa_payload: Json<TwofaPayload>) -> Result<Json<TwofaResponse>, S
 		invalidate_transactionid(&twofa)?;
 
 		let jwt =
-			UserJwt::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?;
-
-		let jwt = jwt.internal_server_error("JWT is somehow not valid")?;
+			AuthGuard::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?
+				.internal_server_error("JWT is somehow not valid")?;
 
 		Ok(Json(TwofaResponse {
 			valid: true,

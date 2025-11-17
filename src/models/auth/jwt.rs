@@ -12,67 +12,21 @@ use sha2::Sha256;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::{courses::get::domain::GetClassesResponse, users::Student},
+	models::users::Student,
 	redis::{self, session_exist},
-	routes::user::get::domain::GetInfoResponse,
+	routes::{courses::get::domain::GetClassesResponse, user::get::domain::GetInfoResponse},
 };
 
 use super::UserType;
 
 #[derive(Debug)]
-pub struct AuthGuard;
-
-#[async_trait]
-impl<'r> FromRequest<'r> for AuthGuard {
-	type Error = String;
-
-	async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-		let auth_header = request.headers().get_one("Authorization");
-		match auth_header {
-			Some(header) if header.starts_with("Bearer ") => {
-				let token = header.trim_start_matches("Bearer ");
-				let is_correct = match validate_jwt(token.to_string()) {
-					Ok(is_correct) => is_correct,
-					Err(e) => {
-						return Outcome::Error((e, e.to_string()));
-					}
-				};
-				if is_correct {
-					Outcome::Success(AuthGuard)
-				} else {
-					Outcome::Error((Status::Unauthorized, "Invalid Token".to_string()))
-				}
-			}
-			_ => Outcome::Error((
-				Status::Unauthorized,
-				"Authorization header missing".to_string(),
-			)),
-		}
-	}
-}
-
-fn validate_jwt(jwt: String) -> Result<bool, Status> {
-	let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
-		|| {
-			eprintln!("JWT Secret must be in .env");
-			exit(1)
-		},
-		|secret| secret,
-	);
-	let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-		.internal_server_error("Error getting key from JWT secret")?;
-
-	Ok(jwt.verify_with_key(&key).is_ok())
-}
-
-#[derive(Debug)]
-pub struct UserJwt {
+pub struct AuthGuard {
 	pub session_id: String,
 	pub user_type: UserType,
 }
 
-impl UserJwt {
-	pub fn from_raw_jwt(raw_jwt: &str) -> Result<Option<Self>, Status> {
+impl AuthGuard {
+	fn from_raw_jwt(raw_jwt: &str) -> Result<Self, String> {
 		let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
 			|| {
 				eprintln!("JWT Secret must be in .env");
@@ -81,30 +35,26 @@ impl UserJwt {
 			|secret| secret,
 		);
 		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-			.internal_server_error("Error getting key from JWT secret")?;
+			.map_err(|e| format!("Error getting key from JWT secret: {e}"))?;
 
 		let claims: BTreeMap<String, String> = raw_jwt
 			.verify_with_key(&key)
-			.internal_server_error("Error getting claims on jwt token")?;
+			.map_err(|e| format!("Error getting claims on jwt token : {e}"))?;
 
 		let user_type = match claims["user_type"].as_str() {
 			"admin" => UserType::Admin,
 			"student" => UserType::Student,
 			"company" => UserType::Company,
 			"university" => UserType::University,
-			_ => return Ok(None),
+			_ => return Err("Incorrect user_type".to_string()),
 		};
 
 		let session_id = claims["session_id"].clone();
 
-		if session_exist(&session_id)? {
-			Ok(Some(Self {
-				session_id,
-				user_type,
-			}))
-		} else {
-			Ok(None)
-		}
+		Ok(Self {
+			session_id,
+			user_type,
+		})
 	}
 
 	pub fn new_raw_jwt_from_data(
@@ -130,27 +80,11 @@ impl UserJwt {
 		claims.insert("session_id", session_id);
 		claims.insert("user_type", user_type.to_string());
 
-		let token = claims
+		let jwt = claims
 			.sign_with_key(&key)
 			.internal_server_error("Error creating jwt token")?;
 
-		Ok(Some(token))
-	}
-
-	pub fn can_access_admin_pages(&self) -> bool {
-		self.user_type == UserType::Admin
-	}
-
-	pub fn can_access_university_pages(&self) -> bool {
-		self.user_type == UserType::University
-	}
-
-	pub fn can_access_student_pages(&self) -> bool {
-		self.user_type == UserType::Student
-	}
-
-	pub fn can_access_company_pages(&self) -> bool {
-		self.user_type == UserType::Company
+		Ok(Some(jwt))
 	}
 
 	pub async fn get_student_info(&self) -> Result<Json<GetInfoResponse>, Status> {
@@ -175,11 +109,80 @@ impl UserJwt {
 	pub async fn get_classes(&self) -> Result<Json<GetClassesResponse>, Status> {
 		if self.user_type != UserType::University {
 			return Ok(Json(GetClassesResponse {
-            success: false,
-            classes: None,
-		}))
+				success: false,
+				classes: None,
+			}));
 		} else {
 			todo!("À finir")
 		}
 	}
+}
+
+#[async_trait]
+impl<'r> FromRequest<'r> for AuthGuard {
+	type Error = String;
+
+	async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+		let auth_header = request.headers().get_one("Authorization");
+		match auth_header {
+			Some(header) if header.starts_with("Bearer ") => {
+				let jwt = header.trim_start_matches("Bearer ");
+				let is_correct = match validate_jwt(jwt) {
+					Ok(is_correct) => is_correct,
+					Err(e) => {
+						return Outcome::Error((e, e.to_string()));
+					}
+				};
+				if is_correct {
+					let auth_guard = match Self::from_raw_jwt(jwt) {
+						Ok(auth_guard) => auth_guard,
+						Err(e) => {
+							return Outcome::Error((
+								Status::InternalServerError,
+								format!(
+									"Error while getting the jwt information (Should be impossible ?) : {e}"
+								),
+							));
+						}
+					};
+					let session_exist = match session_exist(&auth_guard.session_id) {
+						Ok(session_exist) => session_exist,
+						Err(e) => {
+							return Outcome::Error((e, "Error while checking session".to_string()));
+						}
+					};
+					if session_exist {
+						Outcome::Success(auth_guard)
+					} else {
+						rocket::outcome::Outcome::Error((
+							Status::Unauthorized,
+							"Session expired".to_string(),
+						))
+					}
+				} else {
+					Outcome::Error((Status::Unauthorized, "Invalid Token".to_string()))
+				}
+			}
+			_ => Outcome::Error((
+				Status::Unauthorized,
+				"Authorization header missing".to_string(),
+			)),
+		}
+	}
+}
+
+fn validate_jwt(jwt: &str) -> Result<bool, Status> {
+	let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
+		|| {
+			eprintln!("JWT Secret must be in .env");
+			exit(1)
+		},
+		|secret| secret,
+	);
+	let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
+		.internal_server_error("Error getting key from JWT secret")?;
+
+	let claims: Result<BTreeMap<String, String>, jwt::Error> = jwt.verify_with_key(&key);
+
+	Ok(claims.is_ok())
 }

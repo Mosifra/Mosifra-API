@@ -1,25 +1,15 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::models::auth::UserType;
 
 // user_type
 
-#[derive(Debug, Deserialize)]
-pub struct GetUserTypePayload {
-	pub jwt: String,
-}
-
 #[derive(Debug, Serialize)]
 pub struct GetUserTypeResponse {
-	pub user_type: Option<UserType>,
+	pub user_type: UserType,
 }
 
 // get_info
-
-#[derive(Debug, Deserialize)]
-pub struct GetInfoPayload {
-	pub jwt: String,
-}
 
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
