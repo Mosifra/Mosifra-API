@@ -1,10 +1,12 @@
+use std::str::FromStr;
+
 use chrono::NaiveDate;
 use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::auth::UserJwt,
+	models::{auth::UserJwt, users::University},
 	postgres::Db,
 	redis,
 	routes::create::domain::CreateClassPayload,
@@ -16,14 +18,56 @@ use super::CourseType;
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Class {
-	id: String,
-	name: String,
-	course_type: CourseType,
-	date_internship_start: NaiveDate,
-	date_internship_end: NaiveDate,
-	maximum_internship_length: i32,
-	minimum_internship_length: i32,
-	university_id: String,
+	pub id: String,
+	pub name: String,
+	pub course_type: CourseType,
+	pub date_internship_start: NaiveDate,
+	pub date_internship_end: NaiveDate,
+	pub maximum_internship_length: i32,
+	pub minimum_internship_length: i32,
+	pub university_id: String,
+}
+
+impl Class {
+	pub async fn from_id(id: String) -> Result<Option<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let row = client
+			.query_opt(
+				"SELECT name, course_type, start_date, end_date, min_length, max_length, university_id FROM class WHERE id=$1;",
+				&[
+					&id,
+				],
+			)
+			.await
+			.internal_server_error("Error during class select")?;
+
+		let Some(row) = row else { return Ok(None) };
+
+		let name = row.get(0);
+		let course_type_str: String = row.get(1);
+		let course_type = CourseType::from_str(&course_type_str)?;
+		let date_internship_start = row.get(2);
+		let date_internship_end = row.get(3);
+		let maximum_internship_length = row.get(4);
+		let minimum_internship_length = row.get(5);
+		let university_id = row.get(6);
+
+		Ok(Some(Class {
+			id,
+			name,
+			course_type,
+			date_internship_start,
+			date_internship_end,
+			maximum_internship_length,
+			minimum_internship_length,
+			university_id,
+		}))
+	}
+
+	pub async fn get_university(&self) -> Result<University, Status> {
+		Ok(University::from_id(&self.university_id).await?)
+	}
 }
 
 impl TryFrom<CreateClassPayload> for Class {

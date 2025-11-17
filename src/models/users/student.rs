@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
+	models::courses::Class,
 	postgres::{Db, is_login_taken},
 	utils::crypto::{generate_password, hash_password, verify_password},
 };
@@ -19,6 +20,35 @@ pub struct Student {
 }
 
 impl Student {
+	pub async fn from_user_id(user_id: String) -> Result<Self, Status> {
+		let client = Self::setup_database().await?;
+
+		let row = client
+			.query_one(
+				"SELECT first_name, last_name, login, password, mail from student WHERE id=$1",
+				&[&user_id],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let first_name: String = row.get(0);
+		let last_name: String = row.get(1);
+		let login: String = row.get(2);
+		let password: String = row.get(3);
+		let mail: String = row.get(4);
+
+		let student = Self {
+			id: user_id,
+			login,
+			password,
+			mail,
+			first_name,
+			last_name,
+		};
+
+		Ok(student)
+	}
+
 	pub async fn from_record(record: StringRecord) -> Result<Self, Status> {
 		let first_name = record[0].to_string();
 		let last_name = record[1].to_string();
@@ -40,6 +70,23 @@ impl Student {
 		println!("{student:#?}");
 
 		Ok(student)
+	}
+
+	pub async fn get_class(&self) -> Result<Option<Class>, Status> {
+		let client = Self::setup_database().await?;
+
+		let row = client
+			.query_opt("SELECT class_id from student WHERE id=$1", &[&self.id])
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let Some(row) = row else { return Ok(None) };
+
+		let class_id: String = row.get(0);
+
+		let class = Class::from_id(class_id).await?;
+
+		Ok(class)
 	}
 }
 

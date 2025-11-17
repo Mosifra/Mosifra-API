@@ -8,7 +8,7 @@ use routes::{
 		class::create_class, company::create_company, students::create_students,
 		university::create_university,
 	},
-	user::get::user_type::get_user_type,
+	user::get::{info::get_student_info, user_type::get_user_type},
 };
 
 mod error_handling;
@@ -65,6 +65,7 @@ fn rocket() -> _ {
 				create_university,
 				get_user_type,
 				create_class,
+				get_student_info,
 			],
 		)
 		.attach(cors.to_cors().unwrap())

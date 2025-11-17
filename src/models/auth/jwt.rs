@@ -2,10 +2,15 @@ use std::{collections::BTreeMap, env, process::exit};
 
 use hmac::{Hmac, Mac};
 use jwt::{SignWithKey, VerifyWithKey};
-use rocket::http::Status;
+use rocket::{http::Status, serde::json::Json};
 use sha2::Sha256;
 
-use crate::{error_handling::StatusResultHandling, redis::session_exist};
+use crate::{
+	error_handling::{StatusOptionHandling, StatusResultHandling},
+	models::users::Student,
+	redis::{self, session_exist},
+	routes::user::get::domain::GetInfoResponse,
+};
 
 use super::UserType;
 
@@ -95,5 +100,24 @@ impl UserJwt {
 
 	pub fn can_access_company_pages(&self) -> bool {
 		self.user_type == UserType::Company
+	}
+
+	pub async fn get_student_info(&self) -> Result<Json<GetInfoResponse>, Status> {
+		let user_id = redis::get_user_id_from_session_id(self.session_id.clone())?;
+		let student = Student::from_user_id(user_id).await?;
+		let class = student
+			.get_class()
+			.await?
+			.internal_server_error("This student has no class")?;
+		let university = class.get_university().await?;
+
+		Ok(Json(GetInfoResponse {
+			success: true,
+			first_name: Some(student.first_name),
+			last_name: Some(student.last_name),
+			email: Some(student.mail),
+			university: Some(university.name),
+			class_name: Some(class.name),
+		}))
 	}
 }
