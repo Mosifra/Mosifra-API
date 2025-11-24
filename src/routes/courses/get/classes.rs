@@ -8,5 +8,5 @@ use super::domain::GetClassesResponse;
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn get_classes(auth: AuthGuard) -> Result<Json<GetClassesResponse>, Status> {
-	auth.get_classes().await
+	auth.get_classes().await // Needs to be more ? like just not one line maybe logic here ? idk
 }

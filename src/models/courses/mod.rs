@@ -1,5 +1,6 @@
 mod class;
 mod course_type;
+pub mod dto;
 mod internship;
 
 pub use class::Class;

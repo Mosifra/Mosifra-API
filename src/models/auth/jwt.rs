@@ -12,7 +12,10 @@ use sha2::Sha256;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::users::Student,
+	models::{
+		courses::{Class, dto::class::ClassDto},
+		users::Student,
+	},
 	redis::{self, session_exist},
 	routes::{courses::get::domain::GetClassesResponse, user::get::domain::GetInfoResponse},
 };
@@ -106,6 +109,10 @@ impl AuthGuard {
 		}))
 	}
 
+	pub fn get_user_id(&self) -> Result<String, Status> {
+		redis::get_user_id_from_session_id(self.session_id.clone())
+	}
+
 	pub async fn get_classes(&self) -> Result<Json<GetClassesResponse>, Status> {
 		if self.user_type != UserType::University {
 			return Ok(Json(GetClassesResponse {
@@ -113,7 +120,14 @@ impl AuthGuard {
 				classes: None,
 			}));
 		} else {
-			todo!("À finir")
+			let classes = Some(ClassDto::from_vec(
+				Class::get_classes_from_university_id(self.get_user_id()?).await?,
+			));
+
+			return Ok(Json(GetClassesResponse {
+				success: false,
+				classes,
+			}));
 		}
 	}
 }

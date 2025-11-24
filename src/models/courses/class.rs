@@ -1,12 +1,13 @@
-use std::str::FromStr;
-
 use chrono::NaiveDate;
 use rocket::http::Status;
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::{
-	error_handling::StatusResultHandling, models::users::University, postgres::Db, redis,
+	error_handling::{StatusOptionHandling, StatusResultHandling},
+	models::users::University,
+	postgres::Db,
+	redis,
 	routes::create::domain::CreateClassPayload,
 };
 
@@ -41,8 +42,8 @@ impl Class {
 		let Some(row) = row else { return Ok(None) };
 
 		let name = row.get(0);
-		let course_type_str: String = row.get(1);
-		let course_type = CourseType::from_str(&course_type_str)?;
+		let course_type_str: i32 = row.get(1);
+		let course_type = CourseType::from_sql(course_type_str)?;
 		let date_internship_start = row.get(2);
 		let date_internship_end = row.get(3);
 		let maximum_internship_length = row.get(4);
@@ -78,6 +79,30 @@ impl Class {
 			minimum_internship_length: value.minimum_internship_length,
 			university_id,
 		})
+	}
+
+	pub async fn get_classes_from_university_id(
+		university_id: String,
+	) -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let query_res = client
+			.query("SELECT id WHERE university_id=$1", &[&university_id])
+			.await
+			.internal_server_error("Error getting classes")?;
+
+		let mut res = vec![];
+
+		for row in query_res {
+			let id = row.get(0);
+			res.push(
+				Self::from_id(id)
+					.await?
+					.internal_server_error("No classes found")?,
+			);
+		}
+
+		Ok(res)
 	}
 }
 

@@ -4,6 +4,7 @@ use rocket::{Config, http::Method};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 use routes::{
 	auth::{check_session, login_route, twofa_route},
+	courses::get::classes::get_classes,
 	create::{
 		class::create_class, company::create_company, students::create_students,
 		university::create_university,
@@ -66,6 +67,7 @@ fn rocket() -> _ {
 				get_user_type,
 				create_class,
 				get_student_info,
+				get_classes,
 			],
 		)
 		.attach(cors.to_cors().unwrap())
