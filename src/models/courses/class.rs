@@ -87,7 +87,7 @@ impl Class {
 		let client = Self::setup_database().await?;
 
 		let query_res = client
-			.query("SELECT id WHERE university_id=$1", &[&university_id])
+			.query("SELECT id FROM class WHERE university_id=$1", &[&university_id])
 			.await
 			.internal_server_error("Error getting classes")?;
 
