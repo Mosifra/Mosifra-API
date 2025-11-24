@@ -88,24 +88,28 @@ impl Student {
 
 		Ok(class)
 	}
-}
 
-#[async_trait]
-impl Db for Student {
-	async fn insert(&self) -> Result<(), Status> {
+	pub async fn insert_self(&self, class_id: String) -> Result<(), Status> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
 		let id = Uuid::new_v4().to_string();
 
 		client
         .query_opt(
-            "INSERT INTO student (id, first_name, last_name, login, password, mail) VALUES ($1, $2, $3, $4, $5, $6)",
-            &[&id, &self.first_name, &self.last_name, &self.login, &password_hash, &self.mail],
+            "INSERT INTO student (id, first_name, last_name, login, password, mail, class_id) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            &[&id, &self.first_name, &self.last_name, &self.login, &password_hash, &self.mail, &class_id],
         )
         .await
         .internal_server_error("INSERT student Error")?;
 
 		Ok(())
+	}
+}
+
+#[async_trait]
+impl Db for Student {
+	async fn insert(&self) -> Result<(), Status> {
+		unimplemented!()
 	}
 
 	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>

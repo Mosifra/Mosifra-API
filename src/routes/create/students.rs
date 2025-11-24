@@ -6,7 +6,6 @@ use tokio::io::AsyncReadExt;
 use crate::{
 	error_handling::StatusResultHandling,
 	models::{auth::AuthGuard, users::Student},
-	postgres::Db,
 };
 
 use super::domain::{StudentCsvPayload, StudentCsvResponse};
@@ -40,7 +39,7 @@ pub async fn create_students(
 	for result in reader.records() {
 		let record = result.internal_server_error("Failed to read record")?;
 		let student = Student::from_record(record).await?;
-		student.insert().await?;
+		student.insert_self(payload.class.clone()).await?;
 	}
 	Ok(Json(StudentCsvResponse { success: true }))
 }
