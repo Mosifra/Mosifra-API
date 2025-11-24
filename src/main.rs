@@ -50,7 +50,7 @@ fn rocket() -> _ {
 	let cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
 		.allowed_methods(
-			vec![Method::Get, Method::Post, Method::Patch, Method::Options]
+			vec![Method::Get, Method::Post, Method::Patch, Method::Options, Method::Delete]
 				.into_iter()
 				.map(From::from)
 				.collect(),
