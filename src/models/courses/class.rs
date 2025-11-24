@@ -125,6 +125,17 @@ impl Class {
 
 		Ok(res)
 	}
+
+	pub async fn delete(&self) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
+
+		client
+			.query("DELETE FROM class WHERE id=$1;", &[&self.id])
+			.await
+			.internal_server_error("Error while deleting a class")?;
+
+		Ok(())
+	}
 }
 
 #[async_trait]
