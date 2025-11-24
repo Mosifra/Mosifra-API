@@ -140,7 +140,7 @@ impl AuthGuard {
 	) -> Result<Json<GetClassStudentsResponse>, Status> {
 		if self.user_type != UserType::University {
 			Ok(Json(GetClassStudentsResponse {
-				sucess: false,
+				success: false,
 				students: None,
 			}))
 		} else {
@@ -150,7 +150,7 @@ impl AuthGuard {
 			let students = class.get_students().await?;
 
 			Ok(Json(GetClassStudentsResponse {
-				sucess: true,
+				success: true,
 				students: Some(students),
 			}))
 		}

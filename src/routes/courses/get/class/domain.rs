@@ -11,6 +11,6 @@ pub struct GetClassStudentsPayload {
 
 #[derive(Debug, Serialize)]
 pub struct GetClassStudentsResponse {
-	pub sucess: bool,
+	pub success: bool,
 	pub students: Option<Vec<StudentDto>>,
 }
