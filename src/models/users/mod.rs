@@ -1,4 +1,5 @@
 mod company;
+pub mod dto;
 mod student;
 mod university;
 

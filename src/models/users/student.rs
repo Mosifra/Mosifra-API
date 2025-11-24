@@ -20,7 +20,7 @@ pub struct Student {
 }
 
 impl Student {
-	pub async fn from_user_id(user_id: String) -> Result<Self, Status> {
+	pub async fn from_id(user_id: String) -> Result<Self, Status> {
 		let client = Self::setup_database().await?;
 
 		let row = client

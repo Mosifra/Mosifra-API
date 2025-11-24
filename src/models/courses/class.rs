@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::users::University,
+	models::users::{University, dto::StudentDto},
 	postgres::Db,
 	redis,
 	routes::create::domain::CreateClassPayload,
@@ -87,7 +87,10 @@ impl Class {
 		let client = Self::setup_database().await?;
 
 		let query_res = client
-			.query("SELECT id FROM class WHERE university_id=$1", &[&university_id])
+			.query(
+				"SELECT id FROM class WHERE university_id=$1",
+				&[&university_id],
+			)
 			.await
 			.internal_server_error("Error getting classes")?;
 
@@ -100,6 +103,24 @@ impl Class {
 					.await?
 					.internal_server_error("No classes found")?,
 			);
+		}
+
+		Ok(res)
+	}
+
+	pub async fn get_students(&self) -> Result<Vec<StudentDto>, Status> {
+		let client = Self::setup_database().await?;
+
+		let query_res = client
+			.query("SELECT id FROM student WHERE class_id=$1", &[&self.id])
+			.await
+			.internal_server_error("Error getting students")?;
+
+		let mut res = vec![];
+
+		for row in query_res {
+			let id = row.get(0);
+			res.push(StudentDto::from_id(id).await?);
 		}
 
 		Ok(res)

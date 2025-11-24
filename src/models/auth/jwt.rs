@@ -17,7 +17,10 @@ use crate::{
 		users::Student,
 	},
 	redis::{self, session_exist},
-	routes::{courses::get::domain::GetClassesResponse, user::get::domain::GetInfoResponse},
+	routes::{
+		courses::get::{class::domain::GetClassStudentsResponse, domain::GetClassesResponse},
+		user::get::domain::GetInfoResponse,
+	},
 };
 
 use super::UserType;
@@ -92,7 +95,7 @@ impl AuthGuard {
 
 	pub async fn get_student_info(&self) -> Result<Json<GetInfoResponse>, Status> {
 		let user_id = redis::get_user_id_from_session_id(self.session_id.clone())?;
-		let student = Student::from_user_id(user_id).await?;
+		let student = Student::from_id(user_id).await?;
 		let class = student
 			.get_class()
 			.await?
@@ -115,19 +118,41 @@ impl AuthGuard {
 
 	pub async fn get_classes(&self) -> Result<Json<GetClassesResponse>, Status> {
 		if self.user_type != UserType::University {
-			return Ok(Json(GetClassesResponse {
+			Ok(Json(GetClassesResponse {
 				success: false,
 				classes: None,
-			}));
+			}))
 		} else {
 			let classes = Some(ClassDto::from_vec(
 				Class::get_classes_from_university_id(self.get_user_id()?).await?,
 			));
 
-			return Ok(Json(GetClassesResponse {
+			Ok(Json(GetClassesResponse {
 				success: false,
 				classes,
-			}));
+			}))
+		}
+	}
+
+	pub async fn get_students_from_class_id(
+		&self,
+		class_id: String,
+	) -> Result<Json<GetClassStudentsResponse>, Status> {
+		if self.user_type != UserType::University {
+			Ok(Json(GetClassStudentsResponse {
+				sucess: false,
+				students: None,
+			}))
+		} else {
+			let class = Class::from_id(class_id)
+				.await?
+				.internal_server_error("No class")?;
+			let students = class.get_students().await?;
+
+			Ok(Json(GetClassStudentsResponse {
+				sucess: true,
+				students: Some(students),
+			}))
 		}
 	}
 }
