@@ -17,12 +17,12 @@ CREATE TABLE university (
 CREATE TABLE class (
     id VARCHAR(128) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
+    course_type INT REFERENCES course_type(id) ON DELETE CASCADE,
     start_date DATE,
     end_date DATE,
     min_length INT, -- Minimum stage length in weeks
     max_length INT, -- Maximum stage length in weeks
-    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT
+    university_id VARCHAR(128) REFERENCES university(id) ON DELETE CASCADE
 );
 
 
@@ -34,7 +34,7 @@ CREATE TABLE student (
     login VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     mail VARCHAR(255) UNIQUE NOT NULL,
-    class_id VARCHAR(128) REFERENCES class(id) ON DELETE RESTRICT
+    class_id VARCHAR(128) REFERENCES class(id) ON DELETE CASCADE
 );
 
 -- Table entreprise
@@ -62,9 +62,8 @@ CREATE TABLE internship (
 
 -- Relation université <-> stage
 CREATE TABLE university_internship (
-    university_id VARCHAR(128) REFERENCES university(id) ON DELETE RESTRICT,
-    internship_id VARCHAR(128) REFERENCES internship(id) ON DELETE RESTRICT,
+    university_id VARCHAR(128) REFERENCES university(id) ON DELETE CASCADE,
+    internship_id VARCHAR(128) REFERENCES internship(id) ON DELETE CASCADE,
     PRIMARY KEY (university_id, internship_id)
 );
-
-INSERT INTO course_type (name) VALUES ('info'); -- 0
+INSERT INTO course_type (name) VALUES ('info'); -- 1
