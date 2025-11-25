@@ -6,6 +6,7 @@ version = 4
 name = "Mosifra-API"
 version = "0.1.0"
 dependencies = [
+ "any_ascii",
  "anyhow",
  "argon2",
  "async-trait",
@@ -114,6 +115,12 @@ checksum = "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "any_ascii"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c6333e01ba7235575b6ab53e5af10f1c327927fd97c36462917e289557ea64"
 
 [[package]]
 name = "anyhow"

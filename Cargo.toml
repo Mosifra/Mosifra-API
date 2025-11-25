@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+any_ascii = "0.3.3"
 anyhow = "1.0.99"
 argon2 = "0.5.3"
 async-trait = "0.1.89"

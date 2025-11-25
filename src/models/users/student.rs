@@ -9,6 +9,8 @@ use crate::{
 	utils::crypto::{generate_password, hash_password, verify_password},
 };
 
+use any_ascii::any_ascii;
+
 #[derive(Debug)]
 pub struct Student {
 	pub id: String,
@@ -161,7 +163,7 @@ impl Db for Student {
 
 pub async fn generate_login(first_name: &str, last_name: &str) -> Result<String, Status> {
 	let first_name = first_name.to_lowercase();
-	let last_name = last_name.to_lowercase();
+	let last_name = any_ascii(&last_name.to_lowercase()).replace([' ', '-'], "");
 	let first_name_letter = first_name
 		.chars()
 		.next()
