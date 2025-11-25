@@ -40,3 +40,10 @@ pub struct CheckSessionResponse {
 	pub valid: bool,
 	pub error: Option<String>,
 }
+
+// Disconnect
+
+#[derive(Debug, Serialize)]
+pub struct DisconnectResponse {
+	pub success: bool,
+}

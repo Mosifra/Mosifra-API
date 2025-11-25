@@ -3,7 +3,7 @@ use std::{env, process::exit};
 use rocket::{Config, http::Method};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 use routes::{
-	auth::{check_session, login_route, twofa_route},
+	auth::{check_session, login_route, logout_route, twofa_route},
 	courses::{
 		delete::class::delete_class,
 		get::{class::students::get_class_students, classes::get_classes},
@@ -50,10 +50,16 @@ fn rocket() -> _ {
 	let cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
 		.allowed_methods(
-			vec![Method::Get, Method::Post, Method::Patch, Method::Options, Method::Delete]
-				.into_iter()
-				.map(From::from)
-				.collect(),
+			vec![
+				Method::Get,
+				Method::Post,
+				Method::Patch,
+				Method::Options,
+				Method::Delete,
+			]
+			.into_iter()
+			.map(From::from)
+			.collect(),
 		)
 		.allow_credentials(true);
 
@@ -73,6 +79,7 @@ fn rocket() -> _ {
 				get_classes,
 				get_class_students,
 				delete_class,
+				logout_route,
 			],
 		)
 		.attach(cors.to_cors().unwrap())

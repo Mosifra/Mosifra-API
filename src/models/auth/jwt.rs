@@ -18,6 +18,7 @@ use crate::{
 	},
 	redis::{self, session_exist},
 	routes::{
+		auth::DisconnectResponse,
 		courses::get::{class::domain::GetClassStudentsResponse, domain::GetClassesResponse},
 		user::get::domain::GetInfoResponse,
 	},
@@ -154,6 +155,11 @@ impl AuthGuard {
 				students: Some(students),
 			}))
 		}
+	}
+
+	pub async fn logout(&self) -> Result<Json<DisconnectResponse>, Status> {
+		redis::invalidate_session(&self.session_id)?;
+		Ok(Json(DisconnectResponse { success: true }))
 	}
 }
 
