@@ -8,5 +8,5 @@ use super::domain::DisconnectResponse;
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn logout(auth: AuthGuard) -> Result<Json<DisconnectResponse>, Status> {
-	auth.logout().await
+	auth.get_generic_user().await?.logout()
 }

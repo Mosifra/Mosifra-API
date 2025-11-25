@@ -33,9 +33,7 @@ pub async fn login_university(login: LoginPayload) -> Result<Json<LoginResponse>
 	let university = University::login(&login.login, &login.password).await?;
 
 	match university {
-		Some(university) => {
-			set_transaction_id(&university.mail, &university.id, login.remember_me).await
-		}
+		Some(university) => set_transaction_id(&university.mail, &university.id, login.remember_me),
 		None => Ok(Json(LoginResponse {
 			valid: false,
 			transaction_id: None,
@@ -48,7 +46,7 @@ pub async fn login_company(login: LoginPayload) -> Result<Json<LoginResponse>, S
 	let company = Company::login(&login.login, &login.password).await?;
 
 	match company {
-		Some(company) => set_transaction_id(&company.mail, &company.id, login.remember_me).await,
+		Some(company) => set_transaction_id(&company.mail, &company.id, login.remember_me),
 		None => Ok(Json(LoginResponse {
 			valid: false,
 			transaction_id: None,
@@ -61,7 +59,7 @@ pub async fn login_student(login: LoginPayload) -> Result<Json<LoginResponse>, S
 	let student = Student::login(&login.login, &login.password).await?;
 
 	match student {
-		Some(student) => set_transaction_id(&student.mail, &student.id, login.remember_me).await,
+		Some(student) => set_transaction_id(&student.mail, &student.id, login.remember_me),
 		None => Ok(Json(LoginResponse {
 			valid: false,
 			transaction_id: None,
@@ -70,7 +68,7 @@ pub async fn login_student(login: LoginPayload) -> Result<Json<LoginResponse>, S
 	}
 }
 
-pub async fn set_transaction_id(
+pub fn set_transaction_id(
 	mail: &str,
 	id: &str,
 	remember_me: bool,

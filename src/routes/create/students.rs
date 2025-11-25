@@ -31,11 +31,9 @@ pub async fn create_students(
 		.await
 		.internal_server_error("Failed to read csv buffer")?;
 
-	let test = Cursor::new(buffer);
+	let cursor = Cursor::new(buffer);
 
-	println!("{}", payload.class);
-
-	let mut reader = csv::Reader::from_reader(test);
+	let mut reader = csv::Reader::from_reader(cursor);
 	for result in reader.records() {
 		let record = result.internal_server_error("Failed to read record")?;
 		let student = Student::from_record(record).await?;

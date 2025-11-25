@@ -1,6 +1,6 @@
 use rocket::{http::Status, serde::json::Json};
 
-use crate::models::auth::AuthGuard;
+use crate::models::{auth::AuthGuard, courses::dto::class::ClassDto};
 
 use super::domain::GetClassesResponse;
 
@@ -8,5 +8,17 @@ use super::domain::GetClassesResponse;
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn get_classes(auth: AuthGuard) -> Result<Json<GetClassesResponse>, Status> {
-	auth.get_classes().await // Needs to be more ? like just not one line maybe logic here ? idk
+	let generic_user = auth.get_generic_user().await?;
+
+	if generic_user.is_university() {
+		let university = generic_user.to_university()?;
+		let classes = university.get_classes().await?;
+
+		Ok(Json(GetClassesResponse {
+			success: true,
+			classes: Some(ClassDto::from_vec(classes)),
+		}))
+	} else {
+		Err(Status::Unauthorized)
+	}
 }

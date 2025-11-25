@@ -1,11 +1,12 @@
 use csv::StringRecord;
-use rocket::http::Status;
+use rocket::{http::Status, serde::json::Json};
 use uuid::Uuid;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
 	models::courses::Class,
 	postgres::{Db, is_login_taken},
+	routes::user::get::domain::GetInfoResponse,
 	utils::crypto::{generate_password, hash_password, verify_password},
 };
 
@@ -22,13 +23,13 @@ pub struct Student {
 }
 
 impl Student {
-	pub async fn from_id(user_id: String) -> Result<Self, Status> {
+	pub async fn from_id(id: String) -> Result<Self, Status> {
 		let client = Self::setup_database().await?;
 
 		let row = client
 			.query_one(
 				"SELECT first_name, last_name, login, password, mail from student WHERE id=$1",
-				&[&user_id],
+				&[&id],
 			)
 			.await
 			.internal_server_error("SELECT error")?;
@@ -40,7 +41,7 @@ impl Student {
 		let mail: String = row.get(4);
 
 		let student = Self {
-			id: user_id,
+			id,
 			login,
 			password,
 			mail,
@@ -69,7 +70,10 @@ impl Student {
 			last_name,
 		};
 
-		println!("{student:#?}");
+		println!("==========DEBUG==========");
+		println!("login : {}", student.login);
+		println!("password : {}", student.password);
+		println!("==========DEBUG==========");
 
 		Ok(student)
 	}
@@ -105,6 +109,23 @@ impl Student {
         .internal_server_error("INSERT student Error")?;
 
 		Ok(())
+	}
+
+	pub async fn get_info(&self) -> Result<Json<GetInfoResponse>, Status> {
+		let class = self
+			.get_class()
+			.await?
+			.internal_server_error("This student has no class")?;
+		let university = class.get_university().await?;
+
+		Ok(Json(GetInfoResponse {
+			success: true,
+			first_name: Some(self.first_name.clone()),
+			last_name: Some(self.last_name.clone()),
+			email: Some(self.mail.clone()),
+			university: Some(university.name),
+			class_name: Some(class.name),
+		}))
 	}
 }
 

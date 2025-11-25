@@ -63,7 +63,7 @@ impl Class {
 	}
 
 	pub async fn get_university(&self) -> Result<University, Status> {
-		University::from_id(&self.university_id).await
+		University::from_id(self.university_id.clone()).await
 	}
 
 	pub fn try_from_payload(value: CreateClassPayload, session_id: String) -> Result<Self, Status> {
@@ -79,33 +79,6 @@ impl Class {
 			minimum_internship_length: value.minimum_internship_length,
 			university_id,
 		})
-	}
-
-	pub async fn get_classes_from_university_id(
-		university_id: String,
-	) -> Result<Vec<Self>, Status> {
-		let client = Self::setup_database().await?;
-
-		let query_res = client
-			.query(
-				"SELECT id FROM class WHERE university_id=$1",
-				&[&university_id],
-			)
-			.await
-			.internal_server_error("Error getting classes")?;
-
-		let mut res = vec![];
-
-		for row in query_res {
-			let id = row.get(0);
-			res.push(
-				Self::from_id(id)
-					.await?
-					.internal_server_error("No classes found")?,
-			);
-		}
-
-		Ok(res)
 	}
 
 	pub async fn get_students(&self) -> Result<Vec<StudentDto>, Status> {
@@ -135,6 +108,33 @@ impl Class {
 			.internal_server_error("Error while deleting a class")?;
 
 		Ok(())
+	}
+
+	pub async fn get_classes_from_university_id(
+		university_id: String,
+	) -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let query_res = client
+			.query(
+				"SELECT id FROM class WHERE university_id=$1",
+				&[&university_id],
+			)
+			.await
+			.internal_server_error("Error getting classes")?;
+
+		let mut res = vec![];
+
+		for row in query_res {
+			let id = row.get(0);
+			res.push(
+				Self::from_id(id)
+					.await?
+					.internal_server_error("No classes found")?,
+			);
+		}
+
+		Ok(res)
 	}
 }
 

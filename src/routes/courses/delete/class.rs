@@ -2,10 +2,7 @@ use rocket::{http::Status, serde::json::Json};
 
 use crate::{
 	error_handling::StatusOptionHandling,
-	models::{
-		auth::{AuthGuard, UserType},
-		courses::Class,
-	},
+	models::{auth::AuthGuard, courses::Class},
 };
 
 use super::domain::{DeleteClassPayload, DeleteClassResponse};
@@ -18,15 +15,22 @@ pub async fn delete_class(
 	delete_class_payload: Json<DeleteClassPayload>,
 ) -> Result<Json<DeleteClassResponse>, Status> {
 	let payload = delete_class_payload.into_inner();
+	let generic_user = auth.get_generic_user().await?;
 
-	if auth.user_type == UserType::University {
-		let class = Class::from_id(payload.class_id)
-			.await?
-			.internal_server_error("No class with this id")?;
+	if generic_user.is_university() {
+		let class_id = payload.class_id;
+		let university = generic_user.to_university()?;
+		if university.has_class(&class_id) {
+			let class = Class::from_id(class_id)
+				.await?
+				.internal_server_error("No class with this id")?;
 
-		class.delete().await?;
+			class.delete().await?;
 
-		Ok(Json(DeleteClassResponse { success: true }))
+			Ok(Json(DeleteClassResponse { success: true }))
+		} else {
+			Err(Status::Unauthorized)
+		}
 	} else {
 		Err(Status::Unauthorized)
 	}

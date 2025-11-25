@@ -8,5 +8,12 @@ use super::domain::GetInfoResponse;
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn get_student_info(auth: AuthGuard) -> Result<Json<GetInfoResponse>, Status> {
-	auth.get_student_info().await
+	let generic_user = auth.get_generic_user().await?;
+
+	if generic_user.is_student() {
+		let student = generic_user.to_student()?;
+		student.get_info().await
+	} else {
+		Err(Status::Unauthorized)
+	}
 }

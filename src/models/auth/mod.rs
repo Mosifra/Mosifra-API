@@ -1,5 +1,5 @@
-mod jwt;
+mod auth_guard;
 mod user_type;
 
-pub use jwt::AuthGuard;
+pub use auth_guard::AuthGuard;
 pub use user_type::UserType;

@@ -6,22 +6,13 @@ use rocket::{
 	Request,
 	http::Status,
 	request::{FromRequest, Outcome},
-	serde::json::Json,
 };
 use sha2::Sha256;
 
 use crate::{
-	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::{
-		courses::{Class, dto::class::ClassDto},
-		users::Student,
-	},
+	error_handling::StatusResultHandling,
+	models::users::{GenericUser, Student, University},
 	redis::{self, session_exist},
-	routes::{
-		auth::DisconnectResponse,
-		courses::get::{class::domain::GetClassStudentsResponse, domain::GetClassesResponse},
-		user::get::domain::GetInfoResponse,
-	},
 };
 
 use super::UserType;
@@ -94,72 +85,23 @@ impl AuthGuard {
 		Ok(Some(jwt))
 	}
 
-	pub async fn get_student_info(&self) -> Result<Json<GetInfoResponse>, Status> {
-		let user_id = redis::get_user_id_from_session_id(self.session_id.clone())?;
-		let student = Student::from_id(user_id).await?;
-		let class = student
-			.get_class()
-			.await?
-			.internal_server_error("This student has no class")?;
-		let university = class.get_university().await?;
-
-		Ok(Json(GetInfoResponse {
-			success: true,
-			first_name: Some(student.first_name),
-			last_name: Some(student.last_name),
-			email: Some(student.mail),
-			university: Some(university.name),
-			class_name: Some(class.name),
-		}))
+	pub async fn get_generic_user(&self) -> Result<GenericUser, Status> {
+		match self.user_type {
+			UserType::Admin => todo!(),
+			UserType::University => Ok(GenericUser::new(
+				University::from_id(self.get_user_id()?),
+				self.session_id.clone(),
+			)),
+			UserType::Student => Ok(GenericUser::new(
+				Student::from_id(self.get_user_id()?),
+				self.session_id.clone(),
+			)),
+			UserType::Company => todo!(),
+		}
 	}
 
 	pub fn get_user_id(&self) -> Result<String, Status> {
 		redis::get_user_id_from_session_id(self.session_id.clone())
-	}
-
-	pub async fn get_classes(&self) -> Result<Json<GetClassesResponse>, Status> {
-		if self.user_type != UserType::University {
-			Ok(Json(GetClassesResponse {
-				success: false,
-				classes: None,
-			}))
-		} else {
-			let classes = Some(ClassDto::from_vec(
-				Class::get_classes_from_university_id(self.get_user_id()?).await?,
-			));
-
-			Ok(Json(GetClassesResponse {
-				success: false,
-				classes,
-			}))
-		}
-	}
-
-	pub async fn get_students_from_class_id(
-		&self,
-		class_id: String,
-	) -> Result<Json<GetClassStudentsResponse>, Status> {
-		if self.user_type != UserType::University {
-			Ok(Json(GetClassStudentsResponse {
-				success: false,
-				students: None,
-			}))
-		} else {
-			let class = Class::from_id(class_id)
-				.await?
-				.internal_server_error("No class")?;
-			let students = class.get_students().await?;
-
-			Ok(Json(GetClassStudentsResponse {
-				success: true,
-				students: Some(students),
-			}))
-		}
-	}
-
-	pub async fn logout(&self) -> Result<Json<DisconnectResponse>, Status> {
-		redis::invalidate_session(&self.session_id)?;
-		Ok(Json(DisconnectResponse { success: true }))
 	}
 }
 
