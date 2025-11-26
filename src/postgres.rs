@@ -23,7 +23,9 @@ pub trait Db {
 		setup_database().await
 	}
 
-	async fn insert(&self) -> Result<(), Status>;
+	async fn insert(&self) -> Result<(), Status> {
+		unimplemented!("Need to refacto this system")
+	}
 
 	#[allow(unused_variables)]
 	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>

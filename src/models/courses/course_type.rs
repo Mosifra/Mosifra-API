@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
 

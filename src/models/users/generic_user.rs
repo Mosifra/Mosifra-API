@@ -4,7 +4,7 @@ use rocket::{http::Status, serde::json::Json};
 
 use crate::{error_handling::StatusOptionHandling, redis, routes::auth::DisconnectResponse};
 
-use super::{Student, University};
+use super::{Company, Student, University};
 
 pub struct GenericUser {
 	session_id: String,
@@ -37,6 +37,16 @@ impl GenericUser {
 		self.inner
 			.downcast_ref::<Student>()
 			.internal_server_error("Cannot convert GenericUser to Student")
+	}
+
+	pub fn is_company(&self) -> bool {
+		self.inner.is::<Company>()
+	}
+
+	pub fn to_company(&self) -> Result<&Company, Status> {
+		self.inner
+			.downcast_ref::<Company>()
+			.internal_server_error("Cannot convert GenericUser to Company")
 	}
 
 	pub fn logout(&self) -> Result<Json<DisconnectResponse>, Status> {

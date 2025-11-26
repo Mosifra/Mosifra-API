@@ -103,3 +103,21 @@ pub struct CreateClassPayload {
 pub struct CreateClassResponse {
 	pub success: bool,
 }
+
+// Internship
+#[derive(Debug, Deserialize)]
+pub struct CreateIntershipPayload {
+	pub course_type: CourseType,
+	pub start_date: NaiveDate,
+	pub end_date: NaiveDate,
+	pub min_internship_length: i32,
+	pub max_internship_length: i32,
+	pub title: String,
+	pub description: String,
+	pub place: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CreateInternshipResponse {
+	pub success: bool,
+}

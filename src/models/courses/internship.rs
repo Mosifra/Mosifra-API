@@ -1,54 +1,53 @@
 use chrono::NaiveDate;
 use rocket::http::Status;
-use serde::Deserialize;
-use uuid::Uuid;
 
 use anyhow::Result;
+
+use crate::{error_handling::StatusResultHandling, postgres::Db};
 
 use super::course_type::CourseType;
 
 #[derive(Debug)]
 #[allow(dead_code)] // WIP
 pub struct Internship {
-	id: String,
-	course_type: CourseType,
-	date_start: NaiveDate,
-	date_end: NaiveDate,
+	pub id: String,
+	pub course_type: CourseType,
+	pub date_start: NaiveDate,
+	pub date_end: NaiveDate,
 	#[allow(clippy::struct_field_names)] // Normal
-	internship_duration_min_in_weeks: u8,
+	pub internship_duration_min_in_weeks: i32,
 	#[allow(clippy::struct_field_names)] // Normal
-	internship_duration_max_in_weeks: u8,
-	title: String,
-	description: String,
-	place: String,
+	pub internship_duration_max_in_weeks: i32,
+	pub title: String,
+	pub description: String,
+	pub place: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct InternshipDto {
-	course_type: i32,
-	date_start: NaiveDate,
-	date_end: NaiveDate,
-	internship_duration_min_in_weeks: u8,
-	internship_duration_max_in_weeks: u8,
-	title: String,
-	description: String,
-	place: String,
-}
+impl Internship {
+	pub async fn insert_with_company(&self, company_id: String) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
 
-impl TryFrom<InternshipDto> for Internship {
-	type Error = Status;
+		client.query(
+			"INSERT INTO internship (id, course_type, company_id, start_date, end_date, min_internship_length, max_internship_length, title, description, place) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);",
+		&[
+					&self.id,
+					&self.course_type.to_sql(),
+					&company_id,
+					&self.date_start,
+					&self.date_end,
+					&self.internship_duration_min_in_weeks,
+					&self.internship_duration_max_in_weeks,
+					&self.title,
+					&self.description,
+					&self.place
+				]
+			)
+		.await
+		.internal_server_error("Failed to insert internship")?;
 
-	fn try_from(value: InternshipDto) -> Result<Self, Self::Error> {
-		Ok(Self {
-			id: Uuid::new_v4().to_string(),
-			course_type: CourseType::from_sql(value.course_type)?,
-			date_start: value.date_start,
-			date_end: value.date_end,
-			internship_duration_min_in_weeks: value.internship_duration_min_in_weeks,
-			internship_duration_max_in_weeks: value.internship_duration_max_in_weeks,
-			title: value.title,
-			description: value.description,
-			place: value.place,
-		})
+		Ok(())
 	}
 }
+
+#[async_trait]
+impl Db for Internship {}

@@ -33,6 +33,11 @@ impl Db for Company {
 			.await
 			.internal_server_error("Error during company insert")?;
 
+		println!("==========DEBUG==========");
+		println!("login : {}", self.login);
+		println!("password : {}", self.password);
+		println!("==========DEBUG==========");
+
 		Ok(())
 	}
 

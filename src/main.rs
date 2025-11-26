@@ -9,8 +9,8 @@ use routes::{
 		get::{class::students::get_class_students, classes::get_classes},
 	},
 	create::{
-		class::create_class, company::create_company, students::create_students,
-		university::create_university,
+		class::create_class, company::create_company, internship::create_internship,
+		students::create_students, university::create_university,
 	},
 	user::get::{info::get_student_info, user_type::get_user_type},
 };
@@ -80,6 +80,7 @@ fn rocket() -> _ {
 				get_class_students,
 				delete_class,
 				logout_route,
+				create_internship,
 			],
 		)
 		.attach(cors.to_cors().unwrap())
