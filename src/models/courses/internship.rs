@@ -2,12 +2,14 @@ use chrono::NaiveDate;
 use rocket::http::Status;
 
 use anyhow::Result;
+use serde::Serialize;
+use tokio_postgres::Row;
 
 use crate::{error_handling::StatusResultHandling, postgres::Db};
 
 use super::course_type::CourseType;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Internship {
 	pub id: String,
 	pub course_type: CourseType,
@@ -47,6 +49,31 @@ impl Internship {
 		Ok(())
 	}
 
+	fn from_row(row: &Row) -> Result<Self, Status> {
+		let id: String = row.get(0);
+		let course_type_id: i32 = row.get(1);
+		let course_type = CourseType::from_sql(course_type_id)?;
+		let start_date: NaiveDate = row.get(2);
+		let end_date: NaiveDate = row.get(3);
+		let min_internship_length: i32 = row.get(4);
+		let max_internship_length: i32 = row.get(5);
+		let title: String = row.get(6);
+		let description: String = row.get(7);
+		let place: String = row.get(8);
+
+		Ok(Self {
+			id,
+			course_type,
+			date_start: start_date,
+			date_end: end_date,
+			min_internship_length,
+			max_internship_length,
+			title,
+			description,
+			place,
+		})
+	}
+
 	pub async fn from_company_id(company_id: &str) -> Result<Vec<Self>, Status> {
 		let client = Self::setup_database().await?;
 
@@ -61,28 +88,49 @@ impl Internship {
 		let mut res = vec![];
 
 		for row in rows {
-			let id: String = row.get(0);
-			let course_type_id: i32 = row.get(1);
-			let course_type = CourseType::from_sql(course_type_id)?;
-			let start_date: NaiveDate = row.get(2);
-			let end_date: NaiveDate = row.get(3);
-			let min_internship_length: i32 = row.get(4);
-			let max_internship_length: i32 = row.get(5);
-			let title: String = row.get(6);
-			let description: String = row.get(7);
-			let place: String = row.get(8);
+			res.push(Self::from_row(&row)?);
+		}
 
-			res.push(Self {
-				id,
-				course_type,
-				date_start: start_date,
-				date_end: end_date,
-				min_internship_length,
-				max_internship_length,
-				title,
-				description,
-				place,
-			});
+		Ok(res)
+	}
+
+	pub async fn get_all() -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let rows = client
+			.query(
+				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship",
+				&[],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let mut res = vec![];
+
+		for row in rows {
+			res.push(Self::from_row(&row)?);
+		}
+
+		Ok(res)
+	}
+
+	pub async fn get_all_based_on_course_type(
+		course_type: CourseType,
+	) -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let rows = client
+			.query(
+				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship WHERE course_type=$1",
+				&[&course_type.to_sql()],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let mut res = vec![];
+
+		for row in rows {
+			res.push(Self::from_row(&row)?);
 		}
 
 		Ok(res)
