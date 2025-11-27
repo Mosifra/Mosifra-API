@@ -68,6 +68,7 @@ impl Db for Company {
 			let login: String = row.get(2);
 			let password: String = row.get(3);
 			let mail: String = row.get(4);
+			let internship_list = Internship::from_company_id(&id).await?;
 
 			let company = Self {
 				id,
@@ -75,7 +76,7 @@ impl Db for Company {
 				password,
 				mail,
 				name,
-				internship_list: vec![], //WIP
+				internship_list,
 			};
 
 			Ok(Some(company))

@@ -8,16 +8,15 @@ use crate::{error_handling::StatusResultHandling, postgres::Db};
 use super::course_type::CourseType;
 
 #[derive(Debug)]
-#[allow(dead_code)] // WIP
 pub struct Internship {
 	pub id: String,
 	pub course_type: CourseType,
 	pub date_start: NaiveDate,
 	pub date_end: NaiveDate,
 	#[allow(clippy::struct_field_names)] // Normal
-	pub internship_duration_min_in_weeks: i32,
+	pub min_internship_length: i32,
 	#[allow(clippy::struct_field_names)] // Normal
-	pub internship_duration_max_in_weeks: i32,
+	pub max_internship_length: i32,
 	pub title: String,
 	pub description: String,
 	pub place: String,
@@ -35,8 +34,8 @@ impl Internship {
 					&company_id,
 					&self.date_start,
 					&self.date_end,
-					&self.internship_duration_min_in_weeks,
-					&self.internship_duration_max_in_weeks,
+					&self.min_internship_length,
+					&self.max_internship_length,
 					&self.title,
 					&self.description,
 					&self.place
@@ -46,6 +45,47 @@ impl Internship {
 		.internal_server_error("Failed to insert internship")?;
 
 		Ok(())
+	}
+
+	pub async fn from_company_id(company_id: &str) -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let rows = client
+			.query(
+				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship WHERE company_id=$1",
+				&[&company_id],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let mut res = vec![];
+
+		for row in rows {
+			let id: String = row.get(0);
+			let course_type_id: i32 = row.get(1);
+			let course_type = CourseType::from_sql(course_type_id)?;
+			let start_date: NaiveDate = row.get(2);
+			let end_date: NaiveDate = row.get(3);
+			let min_internship_length: i32 = row.get(4);
+			let max_internship_length: i32 = row.get(5);
+			let title: String = row.get(6);
+			let description: String = row.get(7);
+			let place: String = row.get(8);
+
+			res.push(Self {
+				id,
+				course_type,
+				date_start: start_date,
+				date_end: end_date,
+				min_internship_length,
+				max_internship_length,
+				title,
+				description,
+				place,
+			});
+		}
+
+		Ok(res)
 	}
 }
 
