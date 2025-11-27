@@ -27,7 +27,7 @@ impl Db for Company {
 
 		client
 			.query_opt(
-				"INSERT INTO company (id, name, login, password, mail) VALUES ($1, $2, $3, $4);",
+				"INSERT INTO company (id, name, login, password, mail) VALUES ($1, $2, $3, $4, $5);",
 				&[&id, &self.name, &self.login, &password_hash, &self.mail],
 			)
 			.await
