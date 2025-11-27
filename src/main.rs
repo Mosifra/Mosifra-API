@@ -6,7 +6,9 @@ use routes::{
 	auth::{check_session, login_route, logout_route, twofa_route},
 	courses::{
 		delete::class::delete_class,
-		get::{class::students::get_class_students, classes::get_classes},
+		get::{
+			class::students::get_class_students, classes::get_classes, internships::get_internships,
+		},
 	},
 	create::{
 		class::create_class, company::create_company, internship::create_internship,
@@ -81,6 +83,7 @@ fn rocket() -> _ {
 				delete_class,
 				logout_route,
 				create_internship,
+				get_internships,
 			],
 		)
 		.attach(cors.to_cors().unwrap())

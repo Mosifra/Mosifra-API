@@ -11,7 +11,7 @@ use sha2::Sha256;
 
 use crate::{
 	error_handling::StatusResultHandling,
-	models::users::{GenericUser, Student, University},
+	models::users::{Company, GenericUser, Student, University},
 	redis::{self, session_exist},
 };
 
@@ -96,7 +96,10 @@ impl AuthGuard {
 				Student::from_id(self.get_user_id()?),
 				self.session_id.clone(),
 			)),
-			UserType::Company => todo!(),
+			UserType::Company => Ok(GenericUser::new(
+				Company::from_id(self.get_user_id()?),
+				self.session_id.clone(),
+			)),
 		}
 	}
 

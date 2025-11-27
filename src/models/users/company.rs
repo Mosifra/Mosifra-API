@@ -18,6 +18,36 @@ pub struct Company {
 	pub internship_list: Vec<Internship>,
 }
 
+impl Company {
+	pub async fn from_id(id: String) -> Result<Self, Status> {
+		let client = Self::setup_database().await?;
+
+		let row = client
+			.query_one(
+				"SELECT login, password, mail, name from student WHERE id=$1",
+				&[&id],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let login: String = row.get(0);
+		let password: String = row.get(1);
+		let mail: String = row.get(2);
+		let name: String = row.get(3);
+
+		let student = Self {
+			id,
+			login,
+			password,
+			mail,
+			name,
+			internship_list: vec![],
+		};
+
+		Ok(student)
+	}
+}
+
 #[async_trait]
 impl Db for Company {
 	async fn insert(&self) -> Result<(), Status> {
