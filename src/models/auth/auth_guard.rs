@@ -89,15 +89,15 @@ impl AuthGuard {
 		match self.user_type {
 			UserType::Admin => todo!(),
 			UserType::University => Ok(GenericUser::new(
-				University::from_id(self.get_user_id()?),
+				University::from_id(self.get_user_id()?).await?,
 				self.session_id.clone(),
 			)),
 			UserType::Student => Ok(GenericUser::new(
-				Student::from_id(self.get_user_id()?),
+				Student::from_id(self.get_user_id()?).await?,
 				self.session_id.clone(),
 			)),
 			UserType::Company => Ok(GenericUser::new(
-				Company::from_id(self.get_user_id()?),
+				Company::from_id(self.get_user_id()?).await?,
 				self.session_id.clone(),
 			)),
 		}
