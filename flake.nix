@@ -1,30 +1,19 @@
 {
-  description = "Rust dev environment flake";
+  description = "A very basic flake";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+  };
 
   outputs = {
     self,
     nixpkgs,
-    ...
   }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {inherit system;};
+    pkgs = nixpkgs.legacyPackages."x86_64-linux";
   in {
-    devShells.default = pkgs.mkShell {
-      buildInputs = [
-        pkgs.rustup
-        pkgs.rust-analyzer
-        pkgs.cargo
-        pkgs.clippy
-        pkgs.rustfmt
-      ];
-
-      shellHook = ''
-        echo "Shell lancé"
-        export CARGO_HOME=$PWD/.cargo
-        export RUSTUP_HOME=$PWD/.rustup
-      '';
+    devShells."x86_64-linux".default = pkgs.mkShell {
+      buildInputs = with pkgs; [cargo rustc rustfmt clippy rust-analyser];
+      env.RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
     };
   };
 }
