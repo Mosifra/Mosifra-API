@@ -23,7 +23,7 @@ db.files.insertOne({
   size: 123456,
   mimeType: "application/pdf",
   checksum: "sha256:example",
-  owner: "system",
+  owner: "abc",
   createdAt: new Date(),
   path: "files/documents/example.pdf"
 });

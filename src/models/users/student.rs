@@ -95,6 +95,14 @@ impl Student {
 		Ok(class)
 	}
 
+	pub async fn is_in_class(&self, class_id: &str) -> Result<bool, Status> {
+		let class = self
+			.get_class()
+			.await?
+			.internal_server_error("Student has a class but class does not exist")?;
+		Ok(class.id == class_id)
+	}
+
 	pub async fn insert_self(&self, class_id: String) -> Result<(), Status> {
 		let client = Self::setup_database().await?;
 		let password_hash = hash_password(&self.password)?;
