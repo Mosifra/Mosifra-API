@@ -16,7 +16,6 @@ use routes::{
 		class::create_class, company::create_company, internship::create_internship,
 		students::create_students, university::create_university,
 	},
-	user::get::{info::get_student_info, user_type::get_user_type},
 	user::get::{
 		student::{course_type::get_student_course_type, info::get_student_info},
 		university::course_types::get_university_course_types,

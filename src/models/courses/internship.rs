@@ -158,12 +158,14 @@ impl Internship {
 		Ok(res)
 	}
 
-	pub async fn get_all_based_on_course_type(
-		course_type: CourseType,
+	pub async fn get_all_based_on_course_types(
+		course_types: Vec<CourseType>,
 	) -> Result<Vec<Self>, Status> {
 		let client = Self::setup_database().await?;
+		let mut res = vec![];
 
-		let rows = client
+		for course_type in course_types {
+			let rows = client
 			.query(
 				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship WHERE course_type=$1",
 				&[&course_type.to_sql()],
@@ -171,10 +173,9 @@ impl Internship {
 			.await
 			.internal_server_error("SELECT error")?;
 
-		let mut res = vec![];
-
-		for row in rows {
-			res.push(Self::from_row(&row)?);
+			for row in rows {
+				res.push(Self::from_row(&row)?);
+			}
 		}
 
 		Ok(res)

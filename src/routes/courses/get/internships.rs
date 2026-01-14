@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use rocket::{http::Status, serde::json::Json};
 
 use crate::{
@@ -18,31 +20,26 @@ pub async fn get_internships(
 	let payload = get_internships_payload.into_inner();
 
 	if generic_user.is_university()
-		&& let Some(course_type) = payload.course_type
+		&& let Some(course_types) = payload.course_types
 	{
-		let internships = Internship::get_all_based_on_course_type(course_type).await?;
-
-		Ok(Json(GetInternshipsResponse {
-			success: true,
-			internships,
-		}))
-	} else if generic_user.is_university() && payload.course_type.is_none() {
-		let internships = Internship::get_all().await?;
+		let internships = Internship::get_all_based_on_course_types(course_types).await?;
 
 		Ok(Json(GetInternshipsResponse {
 			success: true,
 			internships,
 		}))
 	} else if generic_user.is_student()
-		&& let Some(course_type) = payload.course_type
+		&& let Some(course_types) = payload.course_types
+		&& course_types.len() == 1
 	{
+		let course_type = course_types.index(0);
 		let student = generic_user.to_student()?;
 		let class = student
 			.get_class()
 			.await?
 			.internal_server_error("Student has no class (Should not be possible)")?;
-		if class.course_type == course_type {
-			let internships = Internship::get_all_based_on_course_type(course_type).await?;
+		if class.course_type == *course_type {
+			let internships = Internship::get_all_based_on_course_types(course_types).await?;
 
 			Ok(Json(GetInternshipsResponse {
 				success: true,

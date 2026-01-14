@@ -14,7 +14,7 @@ pub struct GetClassesResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct GetInternshipsPayload {
-	pub course_type: Option<CourseType>,
+	pub course_types: Option<Vec<CourseType>>,
 }
 
 #[derive(Debug, Serialize)]
