@@ -51,6 +51,7 @@ CREATE TABLE internship (
     id VARCHAR(128) PRIMARY KEY,
     course_type INT REFERENCES course_type(id) ON DELETE RESTRICT,
     company_id VARCHAR(128) REFERENCES company(id) ON DELETE SET NULL,
+    university_id VARCHAR(128) REFERENCES university(id) ON DELETE SET NULL,
     start_date DATE, -- Total start time
     end_date DATE, -- Total end time
     min_internship_length INT, -- Minimum length of the internship
@@ -58,6 +59,11 @@ CREATE TABLE internship (
     title VARCHAR(255),
     description TEXT,
     place VARCHAR(255)
+    
+    CONSTRAINT chek_internship_creator CHECK (
+        (company_id IS NOT NULL AND university_id IS NULL)
+     OR (company_id IS NULL AND university_id IS NOT NULL)
+    )
 );
 
 -- Relation université <-> stage
