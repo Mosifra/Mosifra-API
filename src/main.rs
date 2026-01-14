@@ -7,9 +7,7 @@ use routes::{
 	courses::{
 		delete::class::delete_class,
 		get::{
-			class::{course_type::get_class_course_type, students::get_class_students},
-			classes::get_classes,
-			internships::get_internships,
+			class::students::get_class_students, classes::get_classes, internships::get_internships,
 		},
 	},
 	create::{
@@ -86,7 +84,6 @@ fn rocket() -> _ {
 				get_student_info,
 				get_classes,
 				get_class_students,
-				get_class_course_type,
 				delete_class,
 				logout_route,
 				create_internship,
