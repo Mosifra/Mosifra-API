@@ -13,7 +13,7 @@ use super::domain::{GetCourseTypeFromClassIdPayload, GetCourseTypeFromClassIdRes
 )]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
-pub async fn get_class_students(
+pub async fn get_class_course_type(
 	auth: AuthGuard,
 	get_course_type_from_class_id_payload: Json<GetCourseTypeFromClassIdPayload>,
 ) -> Result<Json<GetCourseTypeFromClassIdResponse>, Status> {
