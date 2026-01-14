@@ -49,6 +49,30 @@ impl Internship {
 		Ok(())
 	}
 
+	pub async fn insert_with_university(&self, university_id: String) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
+
+		client.query(
+			"INSERT INTO internship (id, course_type, university_id, start_date, end_date, min_internship_length, max_internship_length, title, description, place) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);",
+		&[
+					&self.id,
+					&self.course_type.to_sql(),
+					&university_id,
+					&self.date_start,
+					&self.date_end,
+					&self.min_internship_length,
+					&self.max_internship_length,
+					&self.title,
+					&self.description,
+					&self.place
+				]
+			)
+		.await
+		.internal_server_error("Failed to insert internship")?;
+
+		Ok(())
+	}
+
 	fn from_row(row: &Row) -> Result<Self, Status> {
 		let id: String = row.get(0);
 		let course_type_id: i32 = row.get(1);
@@ -81,6 +105,26 @@ impl Internship {
 			.query(
 				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship WHERE company_id=$1",
 				&[&company_id],
+			)
+			.await
+			.internal_server_error("SELECT error")?;
+
+		let mut res = vec![];
+
+		for row in rows {
+			res.push(Self::from_row(&row)?);
+		}
+
+		Ok(res)
+	}
+
+	pub async fn from_university_id(university_id: &str) -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let rows = client
+			.query(
+				"SELECT id, course_type, start_date, end_date, min_internship_length, max_internship_length, title, description, place from internship WHERE university_id=$1",
+				&[&university_id],
 			)
 			.await
 			.internal_server_error("SELECT error")?;

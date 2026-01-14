@@ -1,3 +1,4 @@
 pub mod domain;
-pub mod info;
+pub mod student;
+pub mod university;
 pub mod user_type;

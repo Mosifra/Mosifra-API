@@ -1,16 +1,17 @@
 use csv::StringRecord;
-use rocket::{http::Status, serde::json::Json};
+use rocket::http::Status;
 use uuid::Uuid;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::courses::Class,
+	models::courses::{Class, CourseType},
 	postgres::{Db, is_login_taken},
-	routes::user::get::domain::GetInfoResponse,
 	utils::crypto::{generate_password, hash_password, verify_password},
 };
 
 use any_ascii::any_ascii;
+
+use super::University;
 
 #[derive(Debug)]
 pub struct Student {
@@ -119,21 +120,20 @@ impl Student {
 		Ok(())
 	}
 
-	pub async fn get_info(&self) -> Result<Json<GetInfoResponse>, Status> {
+	pub async fn get_university(&self) -> Result<University, Status> {
 		let class = self
 			.get_class()
 			.await?
 			.internal_server_error("This student has no class")?;
-		let university = class.get_university().await?;
+		Ok(class.get_university().await?)
+	}
 
-		Ok(Json(GetInfoResponse {
-			success: true,
-			first_name: Some(self.first_name.clone()),
-			last_name: Some(self.last_name.clone()),
-			email: Some(self.mail.clone()),
-			university: Some(university.name),
-			class_name: Some(class.name),
-		}))
+	pub async fn get_course_type(&self) -> Result<CourseType, Status> {
+		Ok(self
+			.get_class()
+			.await?
+			.internal_server_error("Student has no class")?
+			.course_type)
 	}
 }
 

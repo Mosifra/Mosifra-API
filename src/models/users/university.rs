@@ -2,7 +2,7 @@ use rocket::http::Status;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
-	models::courses::{Class, Internship},
+	models::courses::{Class, CourseType, Internship},
 	postgres::Db,
 	utils::crypto::{hash_password, verify_password},
 };
@@ -117,6 +117,17 @@ impl University {
 					.await?
 					.internal_server_error("No classes found")?,
 			);
+		}
+
+		Ok(res)
+	}
+
+	pub async fn get_course_types(&self) -> Result<Vec<CourseType>, Status> {
+		let classes = self.get_classes().await?;
+		let mut res = vec![];
+
+		for class in classes {
+			res.push(class.course_type);
 		}
 
 		Ok(res)

@@ -17,6 +17,11 @@ use routes::{
 		students::create_students, university::create_university,
 	},
 	user::get::{info::get_student_info, user_type::get_user_type},
+	user::get::{
+		student::{course_type::get_student_course_type, info::get_student_info},
+		university::course_types::get_university_course_types,
+		user_type::get_user_type,
+	},
 };
 
 mod error_handling;
@@ -87,6 +92,8 @@ fn rocket() -> _ {
 				logout_route,
 				create_internship,
 				get_internships,
+				get_university_course_types,
+				get_student_course_type,
 			],
 		)
 		.attach(cors.to_cors().unwrap())
