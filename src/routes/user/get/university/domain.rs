@@ -6,5 +6,5 @@ use crate::models::courses::CourseType;
 #[derive(Debug, Serialize)]
 pub struct GetCourseTypesResponse {
 	pub success: bool,
-	pub course_types: Vec<CourseType>,
+	pub course_type: Vec<CourseType>,
 }

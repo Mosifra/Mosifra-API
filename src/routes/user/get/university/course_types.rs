@@ -18,7 +18,7 @@ pub async fn get_university_course_types(
 
 		Ok(Json(GetCourseTypesResponse {
 			success: true,
-			course_types,
+			course_type: course_types, // Bad but more useful for the front
 		}))
 	} else {
 		Err(Status::Unauthorized)
