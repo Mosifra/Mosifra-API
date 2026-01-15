@@ -3,6 +3,11 @@
 The backend for Mosifra can be run either using a **Nix Flake** or with a
 manually installed Rust toolchain.
 
+## Requirement
+
+You'll need an environment file containing the hash for the jwt and the secret
+for Rocket.
+
 ## Using Nix Flake
 
 The provided flake sets up all the necessary dependencies, including:
