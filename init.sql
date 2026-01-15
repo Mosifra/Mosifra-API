@@ -46,6 +46,14 @@ CREATE TABLE company (
     mail VARCHAR(255) UNIQUE NOT NULL
 );
 
+-- Table administrateur
+CREATE TABLE admin (
+    id VARCHAR(128) PRIMARY KEY,
+    login VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    mail VARCHAR(255) UNIQUE NOT NULL
+);
+
 -- Table stage
 CREATE TABLE internship (
     id VARCHAR(128) PRIMARY KEY,
@@ -73,3 +81,5 @@ CREATE TABLE university_internship (
     PRIMARY KEY (university_id, internship_id)
 );
 INSERT INTO course_type (name) VALUES ('info'); -- 1
+
+
