@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::{courses::CourseType, users::dto::StudentDto};
+use crate::models::users::dto::StudentDto;
 
 // Get Students of class
 

@@ -38,8 +38,9 @@ impl TryFrom<CreateCompanyPayload> for Company {
 }
 
 #[derive(Debug, Serialize)]
-pub struct CreateCompanyResponse {
+pub struct CreateUserResponse {
 	pub success: bool,
+	pub password: Option<String>,
 }
 
 // Student
@@ -80,11 +81,6 @@ impl TryFrom<CreateUniversityPayload> for University {
 			intership_list: vec![],
 		})
 	}
-}
-
-#[derive(Debug, Serialize)]
-pub struct CreateUniversityResponse {
-	pub success: bool,
 }
 
 // Class

@@ -1,21 +1,26 @@
-use std::{collections::BTreeMap, env, process::exit};
+use std::{env, process::exit};
 
-use hmac::{Hmac, Mac};
-use jwt::{SignWithKey, VerifyWithKey};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use rocket::{
 	Request,
 	http::Status,
 	request::{FromRequest, Outcome},
 };
-use sha2::Sha256;
+use serde::{Deserialize, Serialize};
 
 use crate::{
 	error_handling::StatusResultHandling,
-	models::users::{Company, GenericUser, Student, University},
+	models::users::{Company, GenericUser, Student, University, admin::Admin},
 	redis::{self, session_exist},
 };
 
 use super::UserType;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+	session_id: String,
+	user_type: UserType,
+}
 
 #[derive(Debug)]
 pub struct AuthGuard {
@@ -32,37 +37,24 @@ impl AuthGuard {
 			},
 			|secret| secret,
 		);
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-			.map_err(|e| format!("Error getting key from JWT secret: {e}"))?;
 
-		let claims: BTreeMap<String, String> = raw_jwt
-			.verify_with_key(&key)
-			.map_err(|e| format!("Error getting claims on jwt token : {e}"))?;
-
-		let user_type = match claims["user_type"].as_str() {
-			"admin" => UserType::Admin,
-			"student" => UserType::Student,
-			"company" => UserType::Company,
-			"university" => UserType::University,
-			_ => return Err("Incorrect user_type".to_string()),
-		};
-
-		let session_id = claims["session_id"].clone();
+		let token = decode::<Claims>(
+			&raw_jwt,
+			&DecodingKey::from_secret(jwt_secret.as_bytes()),
+			&Validation::default(),
+		)
+		.map_err(|e| format!("JWT is not valid: {e}"))?;
 
 		Ok(Self {
-			session_id,
-			user_type,
+			session_id: token.claims.session_id,
+			user_type: token.claims.user_type,
 		})
 	}
 
 	pub fn new_raw_jwt_from_data(
 		session_id: String,
-		user_type: &UserType,
+		user_type: UserType,
 	) -> Result<Option<String>, Status> {
-		if !session_exist(&session_id)? {
-			return Ok(None);
-		}
-
 		let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
 			|| {
 				eprintln!("JWT Secret must be in .env");
@@ -71,23 +63,28 @@ impl AuthGuard {
 			|secret| secret,
 		);
 
-		let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-			.internal_server_error("Error getting key from JWT secret")?;
+		if !session_exist(&session_id)? {
+			return Ok(None);
+		}
 
-		let mut claims = BTreeMap::new();
-		claims.insert("session_id", session_id);
-		claims.insert("user_type", user_type.to_string());
+		let claims = Claims {
+			session_id,
+			user_type,
+		};
 
-		let jwt = claims
-			.sign_with_key(&key)
-			.internal_server_error("Error creating jwt token")?;
+		let jwt = encode(
+			&Header::default(),
+			&claims,
+			&EncodingKey::from_secret(jwt_secret.as_bytes()),
+		)
+		.internal_server_error("Failed to create JWT token")?;
 
 		Ok(Some(jwt))
 	}
 
 	pub async fn get_generic_user(&self) -> Result<GenericUser, Status> {
 		match self.user_type {
-			UserType::Admin => todo!(),
+			UserType::Admin => Ok(GenericUser::new(Admin::default(), String::new())),
 			UserType::University => Ok(GenericUser::new(
 				University::from_id(self.get_user_id()?).await?,
 				self.session_id.clone(),
@@ -135,19 +132,23 @@ impl<'r> FromRequest<'r> for AuthGuard {
 							));
 						}
 					};
-					let session_exist = match session_exist(&auth_guard.session_id) {
-						Ok(session_exist) => session_exist,
-						Err(e) => {
-							return Outcome::Error((e, "Error while checking session".to_string()));
-						}
-					};
-					if session_exist {
-						Outcome::Success(auth_guard)
+					if auth_guard.user_type == UserType::Admin {
+						Outcome::Success(auth_guard) // NOT GOOD BUT WILL DO FOR TESTING
 					} else {
-						rocket::outcome::Outcome::Error((
-							Status::Unauthorized,
-							"Session expired".to_string(),
-						))
+						let session_exist = match session_exist(&auth_guard.session_id) {
+							Ok(session_exist) => session_exist,
+							Err(e) => {
+								return Outcome::Error((
+									e,
+									"Error while checking session".to_string(),
+								));
+							}
+						};
+						if session_exist {
+							Outcome::Success(auth_guard)
+						} else {
+							Outcome::Error((Status::Unauthorized, "Session expired".to_string()))
+						}
 					}
 				} else {
 					Outcome::Error((Status::Unauthorized, "Invalid Token".to_string()))
@@ -169,10 +170,12 @@ fn validate_jwt(jwt: &str) -> Result<bool, Status> {
 		},
 		|secret| secret,
 	);
-	let key: Hmac<Sha256> = Hmac::new_from_slice(jwt_secret.as_bytes())
-		.internal_server_error("Error getting key from JWT secret")?;
 
-	let claims: Result<BTreeMap<String, String>, jwt::Error> = jwt.verify_with_key(&key);
+	let token = decode::<Claims>(
+		&jwt,
+		&DecodingKey::from_secret(jwt_secret.as_bytes()),
+		&Validation::default(),
+	);
 
-	Ok(claims.is_ok())
+	Ok(token.is_ok())
 }

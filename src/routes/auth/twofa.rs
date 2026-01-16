@@ -39,7 +39,7 @@ pub fn twofa(twofa_payload: Json<TwofaPayload>) -> Result<Json<TwofaResponse>, S
 		invalidate_transactionid(&twofa)?;
 
 		let jwt =
-			AuthGuard::new_raw_jwt_from_data(session_id, &UserType::from_str(&twofa.user_type)?)?
+			AuthGuard::new_raw_jwt_from_data(session_id, UserType::from_str(&twofa.user_type)?)?
 				.internal_server_error("JWT is somehow not valid")?;
 
 		Ok(Json(TwofaResponse {

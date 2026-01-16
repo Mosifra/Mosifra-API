@@ -1,27 +1,46 @@
 use rocket::{http::Status, serde::json::Json};
 
-use crate::{models::users::Company, postgres::Db, utils::mail::verify_mail};
+use crate::{
+	models::{auth::AuthGuard, users::Company},
+	postgres::Db,
+	utils::mail::verify_mail,
+};
 
-use super::domain::{CreateCompanyPayload, CreateCompanyResponse};
+use super::domain::{CreateCompanyPayload, CreateUserResponse};
 
 #[post("/create/company", data = "<create_company_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn create_company(
+	auth: AuthGuard,
 	create_company_payload: Json<CreateCompanyPayload>,
-) -> Result<Json<CreateCompanyResponse>, Status> {
-	let company = Company::try_from(create_company_payload.into_inner())?;
-	println!("{company:#?}");
+) -> Result<Json<CreateUserResponse>, Status> {
+	let generic_user = auth.get_generic_user().await?;
 
-	if verify_mail(&company.mail)? {
-		println!("correct mail");
+	if generic_user.is_admin() {
+		let company = Company::try_from(create_company_payload.into_inner())?;
+
+		if !verify_mail(&company.mail)? {
+			return Ok(Json(CreateUserResponse {
+				success: false,
+				password: None,
+			}));
+		}
+
+		let is_inserted = company.insert().await;
+
+		if is_inserted.is_ok() {
+			Ok(Json(CreateUserResponse {
+				success: true,
+				password: Some(company.password),
+			}))
+		} else {
+			Ok(Json(CreateUserResponse {
+				success: false,
+				password: None,
+			}))
+		}
 	} else {
-		println!("incorrect mail");
+		Err(Status::Unauthorized)
 	}
-
-	let is_done = company.insert().await;
-
-	Ok(Json(CreateCompanyResponse {
-		success: is_done.is_ok(),
-	}))
 }

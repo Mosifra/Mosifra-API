@@ -1,3 +1,4 @@
+pub mod admin;
 mod company;
 pub mod dto;
 mod generic_user;
