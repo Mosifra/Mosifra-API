@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 use rocket::http::Status;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
 
 use super::CourseType;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Class {
 	pub id: String,
 	pub name: String,

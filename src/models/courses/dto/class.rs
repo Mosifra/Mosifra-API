@@ -1,9 +1,9 @@
 use chrono::NaiveDate;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::models::courses::{Class, CourseType};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ClassDto {
 	pub id: String,
 	pub name: String,

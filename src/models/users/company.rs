@@ -1,4 +1,5 @@
 use rocket::http::Status;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
@@ -8,7 +9,7 @@ use crate::{
 	utils::crypto::{hash_password, verify_password},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Company {
 	pub id: String,
 	pub login: String,
@@ -45,6 +46,24 @@ impl Company {
 		};
 
 		Ok(student)
+	}
+
+	pub async fn get_all() -> Result<Vec<Self>, Status> {
+		let client = Self::setup_database().await?;
+
+		let query_res = client
+			.query("SELECT id FROM company", &[])
+			.await
+			.internal_server_error("Error getting companies")?;
+
+		let mut res = vec![];
+
+		for row in query_res {
+			let id = row.get(0);
+			res.push(Self::from_id(id).await?);
+		}
+
+		Ok(res)
 	}
 }
 

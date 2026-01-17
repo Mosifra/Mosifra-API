@@ -2,14 +2,14 @@ use chrono::NaiveDate;
 use rocket::http::Status;
 
 use anyhow::Result;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
 use crate::{error_handling::StatusResultHandling, postgres::Db};
 
 use super::course_type::CourseType;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Internship {
 	pub id: String,
 	pub course_type: CourseType,

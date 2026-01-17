@@ -15,7 +15,9 @@ use routes::{
 		students::create_students, university::create_university,
 	},
 	user::get::{
+		companies::get_companies,
 		student::{course_type::get_student_course_type, info::get_student_info},
+		universities::get_universities,
 		university::course_types::get_university_course_types,
 		user_type::get_user_type,
 	},
@@ -90,6 +92,8 @@ fn rocket() -> _ {
 				get_internships,
 				get_university_course_types,
 				get_student_course_type,
+				get_companies,
+				get_universities,
 			],
 		)
 		.attach(cors.to_cors().unwrap())
