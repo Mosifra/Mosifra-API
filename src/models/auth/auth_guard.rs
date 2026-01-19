@@ -1,4 +1,4 @@
-use std::{env, process::exit};
+use std::{collections::HashSet, env, process::exit};
 
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use rocket::{
@@ -38,10 +38,14 @@ impl AuthGuard {
 			|secret| secret,
 		);
 
+		let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
+		validation.required_spec_claims = HashSet::new();
+		validation.validate_exp = false;
+
 		let token = decode::<Claims>(
 			&raw_jwt,
 			&DecodingKey::from_secret(jwt_secret.as_bytes()),
-			&Validation::default(),
+			&validation,
 		)
 		.map_err(|e| format!("JWT is not valid: {e}"))?;
 
@@ -114,13 +118,7 @@ impl<'r> FromRequest<'r> for AuthGuard {
 		match auth_header {
 			Some(header) if header.starts_with("Bearer ") => {
 				let jwt = header.trim_start_matches("Bearer ");
-				let is_correct = match validate_jwt(jwt) {
-					Ok(is_correct) => is_correct,
-					Err(e) => {
-						return Outcome::Error((e, e.to_string()));
-					}
-				};
-				if is_correct {
+				if validate_jwt(jwt) {
 					let auth_guard = match Self::from_raw_jwt(jwt) {
 						Ok(auth_guard) => auth_guard,
 						Err(e) => {
@@ -162,7 +160,7 @@ impl<'r> FromRequest<'r> for AuthGuard {
 	}
 }
 
-fn validate_jwt(jwt: &str) -> Result<bool, Status> {
+fn validate_jwt(jwt: &str) -> bool {
 	let jwt_secret = env::var("JWT_SECRET").ok().map_or_else(
 		|| {
 			eprintln!("JWT Secret must be in .env");
@@ -171,11 +169,21 @@ fn validate_jwt(jwt: &str) -> Result<bool, Status> {
 		|secret| secret,
 	);
 
+	let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
+	validation.required_spec_claims = HashSet::new();
+	validation.validate_exp = false;
+
 	let token = decode::<Claims>(
 		&jwt,
 		&DecodingKey::from_secret(jwt_secret.as_bytes()),
-		&Validation::default(),
+		&validation,
 	);
 
-	Ok(token.is_ok())
+	match token {
+		Ok(_) => true,
+		Err(e) => {
+			println!("{e}");
+			false
+		}
+	}
 }
