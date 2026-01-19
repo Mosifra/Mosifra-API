@@ -3,78 +3,78 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-	error_handling::StatusResultHandling,
-	models::courses::Internship,
-	postgres::Db,
-	utils::crypto::{hash_password, verify_password},
+    error_handling::StatusResultHandling,
+    models::courses::Internship,
+    postgres::Db,
+    utils::crypto::{hash_password, verify_password},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Company {
-	pub id: String,
-	pub login: String,
-	pub password: String,
-	pub mail: String,
-	pub name: String,
-	pub internship_list: Vec<Internship>,
+    pub id: String,
+    pub login: String,
+    pub password: String,
+    pub mail: String,
+    pub name: String,
+    pub internship_list: Vec<Internship>,
 }
 
 impl Company {
-	pub async fn from_id(id: String) -> Result<Self, Status> {
-		let client = Self::setup_database().await?;
+    pub async fn from_id(id: String) -> Result<Self, Status> {
+        let client = Self::setup_database().await?;
 
-		let row = client
-			.query_one(
-				"SELECT login, password, mail, name from student WHERE id=$1",
-				&[&id],
-			)
-			.await
-			.internal_server_error("SELECT error")?;
+        let row = client
+            .query_one(
+                "SELECT login, password, mail, name from company WHERE id=$1",
+                &[&id],
+            )
+            .await
+            .internal_server_error("SELECT error")?;
 
-		let login: String = row.get(0);
-		let password: String = row.get(1);
-		let mail: String = row.get(2);
-		let name: String = row.get(3);
+        let login: String = row.get(0);
+        let password: String = row.get(1);
+        let mail: String = row.get(2);
+        let name: String = row.get(3);
 
-		let student = Self {
-			id,
-			login,
-			password,
-			mail,
-			name,
-			internship_list: vec![],
-		};
+        let company = Self {
+            id,
+            login,
+            password,
+            mail,
+            name,
+            internship_list: vec![],
+        };
 
-		Ok(student)
-	}
+        Ok(company)
+    }
 
-	pub async fn get_all() -> Result<Vec<Self>, Status> {
-		let client = Self::setup_database().await?;
+    pub async fn get_all() -> Result<Vec<Self>, Status> {
+        let client = Self::setup_database().await?;
 
-		let query_res = client
-			.query("SELECT id FROM company", &[])
-			.await
-			.internal_server_error("Error getting companies")?;
+        let query_res = client
+            .query("SELECT id FROM company", &[])
+            .await
+            .internal_server_error("Error getting companies")?;
 
-		let mut res = vec![];
+        let mut res = vec![];
 
-		for row in query_res {
-			let id = row.get(0);
-			res.push(Self::from_id(id).await?);
-		}
+        for row in query_res {
+            let id = row.get(0);
+            res.push(Self::from_id(id).await?);
+        }
 
-		Ok(res)
-	}
+        Ok(res)
+    }
 }
 
 #[async_trait]
 impl Db for Company {
-	async fn insert(&self) -> Result<(), Status> {
-		let client = Self::setup_database().await?;
-		let password_hash = hash_password(&self.password)?;
-		let id = Uuid::new_v4().to_string();
+    async fn insert(&self) -> Result<(), Status> {
+        let client = Self::setup_database().await?;
+        let password_hash = hash_password(&self.password)?;
+        let id = Uuid::new_v4().to_string();
 
-		client
+        client
 			.query_opt(
 				"INSERT INTO company (id, name, login, password, mail) VALUES ($1, $2, $3, $4, $5);",
 				&[&id, &self.name, &self.login, &password_hash, &self.mail],
@@ -82,69 +82,69 @@ impl Db for Company {
 			.await
 			.internal_server_error("Error during company insert")?;
 
-		println!("==========DEBUG==========");
-		println!("login : {}", self.login);
-		println!("password : {}", self.password);
-		println!("==========DEBUG==========");
+        println!("==========DEBUG==========");
+        println!("login : {}", self.login);
+        println!("password : {}", self.password);
+        println!("==========DEBUG==========");
 
-		Ok(())
-	}
+        Ok(())
+    }
 
-	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
-	where
-		Self: Sized,
-	{
-		let client = Self::setup_database().await?;
+    async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
+    where
+        Self: Sized,
+    {
+        let client = Self::setup_database().await?;
 
-		let row = client
-			.query_one("SELECT password from company WHERE login=$1", &[&login])
-			.await
-			.internal_server_error("SELECT error")?;
+        let row = client
+            .query_one("SELECT password from company WHERE login=$1", &[&login])
+            .await
+            .internal_server_error("SELECT error")?;
 
-		let hashed_password: String = row.get(0);
+        let hashed_password: String = row.get(0);
 
-		if verify_password(password, &hashed_password)? {
-			let row = client
-				.query_one(
-					"SELECT id, name, login, password, mail from company WHERE login=$1",
-					&[&login],
-				)
-				.await
-				.internal_server_error("SELECT error")?;
+        if verify_password(password, &hashed_password)? {
+            let row = client
+                .query_one(
+                    "SELECT id, name, login, password, mail from company WHERE login=$1",
+                    &[&login],
+                )
+                .await
+                .internal_server_error("SELECT error")?;
 
-			let id: String = row.get(0);
-			let name: String = row.get(1);
-			let login: String = row.get(2);
-			let password: String = row.get(3);
-			let mail: String = row.get(4);
-			let internship_list = Internship::from_company_id(&id).await?;
+            let id: String = row.get(0);
+            let name: String = row.get(1);
+            let login: String = row.get(2);
+            let password: String = row.get(3);
+            let mail: String = row.get(4);
+            let internship_list = Internship::from_company_id(&id).await?;
 
-			let company = Self {
-				id,
-				login,
-				password,
-				mail,
-				name,
-				internship_list,
-			};
+            let company = Self {
+                id,
+                login,
+                password,
+                mail,
+                name,
+                internship_list,
+            };
 
-			Ok(Some(company))
-		} else {
-			Ok(None)
-		}
-	}
+            Ok(Some(company))
+        } else {
+            Ok(None)
+        }
+    }
 
-	async fn get_name(&self, user_id: String) -> Result<String, Status> {
-		let client = Self::setup_database().await?;
+    async fn get_name(&self, user_id: String) -> Result<String, Status> {
+        let client = Self::setup_database().await?;
 
-		let row = client
-			.query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
-			.await
-			.internal_server_error("SELECT error")?;
+        let row = client
+            .query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
+            .await
+            .internal_server_error("SELECT error")?;
 
-		let res: String = row
-			.try_get(0)
-			.internal_server_error("Error while trying to get name of company")?;
-		Ok(res)
-	}
+        let res: String = row
+            .try_get(0)
+            .internal_server_error("Error while trying to get name of company")?;
+        Ok(res)
+    }
 }
