@@ -1,6 +1,10 @@
-use std::{env, process::exit};
+use std::process::exit;
 
-use rocket::{Config, http::Method};
+use rocket::{
+	Config,
+	figment::{Figment, providers::Env},
+	http::Method,
+};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 use routes::{
 	auth::{check_session, login_route, logout_route, twofa_route},
@@ -22,6 +26,7 @@ use routes::{
 		user_type::get_user_type,
 	},
 };
+use serde::Deserialize;
 
 mod error_handling;
 pub mod models;
@@ -32,6 +37,12 @@ pub mod utils;
 
 #[macro_use]
 extern crate rocket;
+
+#[derive(Debug, PartialEq, Deserialize)]
+struct Environment {
+	rocket_secret: String,
+	api_port: usize,
+}
 
 #[launch]
 fn rocket() -> _ {
@@ -50,9 +61,18 @@ fn rocket() -> _ {
 		},
 		|secret| secret,
 	);
+	let env: Environment = Figment::from(Env::raw().only(&["rocket_secret", "api_port"]))
+		.extract()
+		.unwrap_or_else(|e| {
+			eprintln!("Error while trying to get the env: {e}");
+			exit(1);
+		});
 
 	let rocket = rocket::custom(Config::from(
 		Config::figment().merge(("secret_key", rocket_secret)),
+		Config::figment()
+			.merge(("secret_key", env.rocket_secret))
+			.merge(("port", env.api_port)),
 	));
 
 	let cors = CorsOptions::default()
