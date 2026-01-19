@@ -3,7 +3,6 @@ FROM rust:1.90
 WORKDIR /usr/src/myapp
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-COPY .env ./
 COPY Rocket.toml ./
 
 RUN cargo install --path .
