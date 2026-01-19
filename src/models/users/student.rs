@@ -186,6 +186,17 @@ impl Db for Student {
 			Ok(None)
 		}
 	}
+
+	async fn delete(&self) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
+
+		client
+			.query_one("DELETE FROM student WHERE id=$1; ", &[&self.id])
+			.await
+			.internal_server_error("Error during student deletion")?;
+
+		Ok(())
+	}
 }
 
 // Yaniss Lasbordes -> ylasbordes1 if already exist ylasbordes2 until ylasbordes{n}

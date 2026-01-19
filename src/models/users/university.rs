@@ -69,6 +69,17 @@ impl Db for University {
 			Ok(None)
 		}
 	}
+
+	async fn delete(&self) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
+
+		client
+			.query_one("DELETE FROM university WHERE id=$1; ", &[&self.id])
+			.await
+			.internal_server_error("Error during university deletion")?;
+
+		Ok(())
+	}
 }
 
 impl University {

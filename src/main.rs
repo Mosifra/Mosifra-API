@@ -18,12 +18,15 @@ use routes::{
 		class::create_class, company::create_company, internship::create_internship,
 		students::create_students, university::create_university,
 	},
-	user::get::{
-		companies::get_companies,
-		student::{course_type::get_student_course_type, info::get_student_info},
-		universities::get_universities,
-		university::course_types::get_university_course_types,
-		user_type::get_user_type,
+	user::{
+		delete::{company::delete_company, university::delete_university},
+		get::{
+			companies::get_companies,
+			student::{course_type::get_student_course_type, info::get_student_info},
+			universities::get_universities,
+			university::course_types::get_university_course_types,
+			user_type::get_user_type,
+		},
 	},
 };
 use serde::Deserialize;
@@ -98,6 +101,8 @@ fn rocket() -> _ {
 				get_student_course_type,
 				get_companies,
 				get_universities,
+				delete_company,
+				delete_university,
 			],
 		)
 		.attach(cors.to_cors().unwrap())

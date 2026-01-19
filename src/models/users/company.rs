@@ -82,69 +82,75 @@ impl Db for Company {
 			.await
 			.internal_server_error("Error during company insert")?;
 
-        println!("==========DEBUG==========");
-        println!("login : {}", self.login);
-        println!("password : {}", self.password);
-        println!("==========DEBUG==========");
+		Ok(())
+	}
 
-        Ok(())
-    }
+	async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
+	where
+		Self: Sized,
+	{
+		let client = Self::setup_database().await?;
 
-    async fn login(login: &str, password: &str) -> Result<Option<Self>, Status>
-    where
-        Self: Sized,
-    {
-        let client = Self::setup_database().await?;
+		let row = client
+			.query_one("SELECT password from company WHERE login=$1", &[&login])
+			.await
+			.internal_server_error("SELECT error")?;
 
-        let row = client
-            .query_one("SELECT password from company WHERE login=$1", &[&login])
-            .await
-            .internal_server_error("SELECT error")?;
+		let hashed_password: String = row.get(0);
 
-        let hashed_password: String = row.get(0);
+		if verify_password(password, &hashed_password)? {
+			let row = client
+				.query_one(
+					"SELECT id, name, login, password, mail from company WHERE login=$1",
+					&[&login],
+				)
+				.await
+				.internal_server_error("SELECT error")?;
 
-        if verify_password(password, &hashed_password)? {
-            let row = client
-                .query_one(
-                    "SELECT id, name, login, password, mail from company WHERE login=$1",
-                    &[&login],
-                )
-                .await
-                .internal_server_error("SELECT error")?;
+			let id: String = row.get(0);
+			let name: String = row.get(1);
+			let login: String = row.get(2);
+			let password: String = row.get(3);
+			let mail: String = row.get(4);
+			let internship_list = Internship::from_company_id(&id).await?;
 
-            let id: String = row.get(0);
-            let name: String = row.get(1);
-            let login: String = row.get(2);
-            let password: String = row.get(3);
-            let mail: String = row.get(4);
-            let internship_list = Internship::from_company_id(&id).await?;
+			let company = Self {
+				id,
+				login,
+				password,
+				mail,
+				name,
+				internship_list,
+			};
 
-            let company = Self {
-                id,
-                login,
-                password,
-                mail,
-                name,
-                internship_list,
-            };
+			Ok(Some(company))
+		} else {
+			Ok(None)
+		}
+	}
 
-            Ok(Some(company))
-        } else {
-            Ok(None)
-        }
-    }
+	async fn get_name(&self, user_id: String) -> Result<String, Status> {
+		let client = Self::setup_database().await?;
 
-    async fn get_name(&self, user_id: String) -> Result<String, Status> {
-        let client = Self::setup_database().await?;
+		let row = client
+			.query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
+			.await
+			.internal_server_error("SELECT error")?;
 
-        let row = client
-            .query_one("SELECT name FROM company WHERE id=$1;", &[&user_id])
-            .await
-            .internal_server_error("SELECT error")?;
+		let res: String = row
+			.try_get(0)
+			.internal_server_error("Error while trying to get name of company")?;
+		Ok(res)
+	}
 
-        let res: String = row
-            .try_get(0)
-            .internal_server_error("Error while trying to get name of company")?;
-        Ok(res)
-    }
+	async fn delete(&self) -> Result<(), Status> {
+		let client = Self::setup_database().await?;
+
+		client
+			.query_one("DELETE FROM company WHERE id=$1; ", &[&self.id])
+			.await
+			.internal_server_error("Error during company deletion")?;
+
+		Ok(())
+	}
 }

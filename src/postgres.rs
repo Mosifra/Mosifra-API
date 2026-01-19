@@ -39,6 +39,10 @@ pub trait Db {
 	async fn get_name(&self, user_id: String) -> Result<String, Status> {
 		unimplemented!("For Company struct only")
 	}
+
+	async fn delete(&self) -> Result<(), Status> {
+		unimplemented!("Need implementation")
+	}
 }
 
 pub async fn is_login_taken(username: &str) -> Result<bool, Status> {
