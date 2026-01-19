@@ -46,21 +46,6 @@ struct Environment {
 
 #[launch]
 fn rocket() -> _ {
-	match dotenvy::dotenv() {
-		Ok(_) => (),
-		Err(e) => {
-			eprintln!("Error while loading .env : {e}");
-			exit(1)
-		}
-	}
-
-	let rocket_secret = env::var("ROCKET_SECRET").ok().map_or_else(
-		|| {
-			eprintln!("Rocket secret must be in .env");
-			exit(1)
-		},
-		|secret| secret,
-	);
 	let env: Environment = Figment::from(Env::raw().only(&["rocket_secret", "api_port"]))
 		.extract()
 		.unwrap_or_else(|e| {
@@ -69,7 +54,6 @@ fn rocket() -> _ {
 		});
 
 	let rocket = rocket::custom(Config::from(
-		Config::figment().merge(("secret_key", rocket_secret)),
 		Config::figment()
 			.merge(("secret_key", env.rocket_secret))
 			.merge(("port", env.api_port)),
