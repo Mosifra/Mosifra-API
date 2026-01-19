@@ -20,7 +20,7 @@ pub struct SessionData {
 }
 
 fn setup_redis() -> Result<Connection, Status> {
-	let client = redis::Client::open("redis://default:redis_password@redis/")
+	let client = redis::Client::open("redis://default:@redis/")
 		.internal_server_error("Error failed to connect to redis")?;
 	client
 		.get_connection()
