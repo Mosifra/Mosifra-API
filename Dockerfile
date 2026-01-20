@@ -9,4 +9,6 @@ RUN cargo install --path . && rm -rf target Cargo.toml Cargo.lock src
 
 CMD ["Mosifra-API"]
 
+USER nonroot
+
 EXPOSE 8000
