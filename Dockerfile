@@ -5,8 +5,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY Rocket.toml ./
 
-RUN cargo install --path .
-RUN rm -rf target Cargo.toml Cargo.lock src
+RUN cargo install --path . && rm -rf target Cargo.toml Cargo.lock src
 
 CMD ["Mosifra-API"]
 
