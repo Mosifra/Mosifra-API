@@ -13,8 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
+    - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+    - uses: actions-rust-lang/setup-rust-toolchain@ac4326d13dde1d6594dbfcb05f9bdb7d8879be6e
       with:
         toolchain: nightly
     - name: Build
@@ -23,8 +23,8 @@ jobs:
   linter:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
+    - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+    - uses: actions-rust-lang/setup-rust-toolchain@ac4326d13dde1d6594dbfcb05f9bdb7d8879be6e
       with:
         toolchain: nightly
         components: clippy
@@ -34,8 +34,8 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
+    - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+    - uses: actions-rust-lang/setup-rust-toolchain@ac4326d13dde1d6594dbfcb05f9bdb7d8879be6e
       with:
         toolchain: nightly
     - name: Run tests
@@ -44,8 +44,8 @@ jobs:
   udeps:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@722adc63f1aa60a57ec37892e133b1d319cae598
+      - uses: actions-rs/toolchain@8e603f32c5c6eeca5b1b2d9d1e7464d926082f1d
         with:
           toolchain: nightly
           override: true
@@ -58,7 +58,7 @@ jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: rustsec/audit-check@v2.0.0
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
