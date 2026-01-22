@@ -13,17 +13,12 @@ pub fn send_2fa_mail(to: &str) -> Result<String, Status> {
 	let mut code = vec![];
 
 	let mut rng = rand::rng();
-	for _ in 1..=6 {
-		let mut nums: Vec<i32> = (0..=9).collect();
-		nums.shuffle(&mut rng);
-		code.push(
-			nums.choose(&mut rng)
-				.internal_server_error("Failed to choose number rng")?
-				.to_string(),
-		);
-	}
+	let mut code = String::new();
 
-	let code = code.join("");
+	for _ in 0..6 {
+    	let num = rng.random_range(0..10);
+    	code.push_str(&num.to_string());
+	}
 
 	let email = Message::builder()
 		.from(Mailbox::new(
