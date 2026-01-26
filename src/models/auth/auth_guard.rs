@@ -107,6 +107,35 @@ impl AuthGuard {
 	pub fn get_user_id(&self) -> Result<String, Status> {
 		redis::get_user_id_from_session_id(self.session_id.clone())
 	}
+
+	fn aaa(jwt: &str) -> Outcome<Self, String> {
+		let auth_guard = match Self::from_raw_jwt(jwt) {
+			Ok(auth_guard) => auth_guard,
+			Err(e) => {
+				return Outcome::Error((
+					Status::InternalServerError,
+					format!(
+						"Error while getting the jwt information (Should be impossible ?) : {e}"
+					),
+				));
+			}
+		};
+		if auth_guard.user_type == UserType::Admin {
+			Outcome::Success(auth_guard) // NOT GOOD BUT WILL DO FOR TESTING
+		} else {
+			let session_exist = match session_exist(&auth_guard.session_id) {
+				Ok(session_exist) => session_exist,
+				Err(e) => {
+					return Outcome::Error((e, "Error while checking session".to_string()));
+				}
+			};
+			if session_exist {
+				Outcome::Success(auth_guard)
+			} else {
+				Outcome::Error((Status::Unauthorized, "Session expired".to_string()))
+			}
+		}
+	}
 }
 
 #[async_trait]
@@ -119,35 +148,7 @@ impl<'r> FromRequest<'r> for AuthGuard {
 			Some(header) if header.starts_with("Bearer ") => {
 				let jwt = header.trim_start_matches("Bearer ");
 				if validate_jwt(jwt) {
-					let auth_guard = match Self::from_raw_jwt(jwt) {
-						Ok(auth_guard) => auth_guard,
-						Err(e) => {
-							return Outcome::Error((
-								Status::InternalServerError,
-								format!(
-									"Error while getting the jwt information (Should be impossible ?) : {e}"
-								),
-							));
-						}
-					};
-					if auth_guard.user_type == UserType::Admin {
-						Outcome::Success(auth_guard) // NOT GOOD BUT WILL DO FOR TESTING
-					} else {
-						let session_exist = match session_exist(&auth_guard.session_id) {
-							Ok(session_exist) => session_exist,
-							Err(e) => {
-								return Outcome::Error((
-									e,
-									"Error while checking session".to_string(),
-								));
-							}
-						};
-						if session_exist {
-							Outcome::Success(auth_guard)
-						} else {
-							Outcome::Error((Status::Unauthorized, "Session expired".to_string()))
-						}
-					}
+					AuthGuard::aaa(jwt)
 				} else {
 					Outcome::Error((Status::Unauthorized, "Invalid Token".to_string()))
 				}

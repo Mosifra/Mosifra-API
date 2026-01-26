@@ -3,21 +3,19 @@ use lettre::{
 	message::{Mailbox, header::ContentType},
 	transport::smtp::authentication::Credentials,
 };
-use rand::seq::{IndexedRandom, SliceRandom};
+use rand::Rng;
 use rocket::http::Status;
 
-use crate::error_handling::{StatusOptionHandling, StatusResultHandling};
+use crate::error_handling::StatusResultHandling;
 
 #[allow(clippy::missing_errors_doc)]
 pub fn send_2fa_mail(to: &str) -> Result<String, Status> {
-	let mut code = vec![];
-
 	let mut rng = rand::rng();
 	let mut code = String::new();
 
 	for _ in 0..6 {
-    	let num = rng.random_range(0..10);
-    	code.push_str(&num.to_string());
+		let num = rng.random_range(0..10);
+		code.push_str(&num.to_string());
 	}
 
 	let email = Message::builder()
