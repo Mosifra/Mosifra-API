@@ -3,9 +3,8 @@ FROM rust:1.90.0
 ARG USER=default
 ENV HOME=/home/$USER
 
-RUN adduser --disabled-password --gecos "" $USER
-
-RUN mkdir -p /usr/src/myapp && chown -R $USER /usr/src/myapp
+RUN adduser --disabled-password --gecos "" "$USER" \
+	&& mkdir -p /usr/src/myapp && chown -R "$USER" /usr/src/myapp
 
 USER $USER
 WORKDIR /usr/src/myapp
