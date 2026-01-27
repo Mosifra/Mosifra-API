@@ -14,7 +14,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY Rocket.toml ./
 
-
 RUN cargo install --path . 
 
 EXPOSE 8000
