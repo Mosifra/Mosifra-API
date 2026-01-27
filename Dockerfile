@@ -14,7 +14,7 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid 1000 nonroot \
-    && useradd --uid 1000 --gid 1000 -m nonroot \
+    && useradd --uid 1000 --gid 1000 -m nonroot
     
 USER nonroot
 
