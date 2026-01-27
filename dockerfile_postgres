@@ -1,3 +1,5 @@
 FROM postgres:15
+ARG USER=default
+RUN adduser --disabled-password --gecos "" $USER
 COPY init.sql /docker-entrypoint-initdb.d/
-USER nonroot
+USER $USER

@@ -1,22 +1,22 @@
-FROM rust:1.90.0-alpine3.22
+FROM rust:1.90.0
 
 ARG USER=default
-ENV HOME /home/$USER
+ENV HOME=/home/$USER
 
-RUN adduser -D $USER
+RUN adduser --disabled-password --gecos "" $USER
+
+RUN mkdir -p /usr/src/myapp && chown -R $USER /usr/src/myapp
 
 USER $USER
-WORKDIR $HOME
-
 WORKDIR /usr/src/myapp
+
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY Rocket.toml ./
 
-RUN cargo install --path . && rm -rf target Cargo.toml Cargo.lock src 
 
-USER nonroot
-
-CMD ["Mosifra-API"]
+RUN cargo install --path . 
 
 EXPOSE 8000
+
+CMD ["Mosifra-API"]
