@@ -9,9 +9,4 @@ RUN cargo install --path . && rm -rf target Cargo.toml Cargo.lock src
 
 CMD ["Mosifra-API"]
 
-RUN groupadd --gid 1000 nonroot \
-    && useradd --uid 1000 --gid 1000 -m nonroot
-    
-USER nonroot
-
 EXPOSE 8000
