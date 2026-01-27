@@ -1,10 +1,12 @@
-FROM alpine:latest as security_provider
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
+FROM rust:1.90.0-alpine3.22
 
-FROM rust:1.90
+ARG USER=default
+ENV HOME /home/$USER
 
-COPY --from=security_provider /etc/passwd /etc/passwd
+RUN adduser -D $USER
+
+USER $USER
+WORKDIR $HOME
 
 WORKDIR /usr/src/myapp
 COPY Cargo.toml Cargo.lock ./
