@@ -92,38 +92,21 @@ impl Db for Company {
 		let client = Self::setup_database().await?;
 
 		let row = client
-			.query_one("SELECT password from company WHERE login=$1", &[&login])
+			.query_opt("SELECT id, password from company WHERE login=$1", &[&login])
 			.await
-			.internal_server_error("SELECT error")?;
+			.internal_server_error("Error getting company by login")?;
 
-		let hashed_password: String = row.get(0);
-
-		if verify_password(password, &hashed_password)? {
-			let row = client
-				.query_one(
-					"SELECT id, name, login, password, mail from company WHERE login=$1",
-					&[&login],
-				)
-				.await
-				.internal_server_error("SELECT error")?;
-
+		if let Some(row) = row {
 			let id: String = row.get(0);
-			let name: String = row.get(1);
-			let login: String = row.get(2);
-			let password: String = row.get(3);
-			let mail: String = row.get(4);
-			let internship_list = Internship::from_company_id(&id).await?;
+			let hashed_password: String = row.get(1);
 
-			let company = Self {
-				id,
-				login,
-				password,
-				mail,
-				name,
-				internship_list,
-			};
-
-			Ok(Some(company))
+			if verify_password(password, &hashed_password)? {
+				let mut company = Self::from_id(id).await?;
+				company.internship_list = Internship::from_company_id(&company.id).await?;
+				Ok(Some(company))
+			} else {
+				Ok(None)
+			}
 		} else {
 			Ok(None)
 		}

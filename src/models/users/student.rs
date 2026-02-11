@@ -150,38 +150,19 @@ impl Db for Student {
 		let client = Self::setup_database().await?;
 
 		let row = client
-			.query_one("SELECT password from student WHERE login=$1", &[&login])
+			.query_opt("SELECT id, password from student WHERE login=$1", &[&login])
 			.await
-			.internal_server_error("SELECT error")?;
+			.internal_server_error("Error getting student by login")?;
 
-		let hashed_password: String = row.get(0);
-
-		if verify_password(password, &hashed_password)? {
-			let row = client
-				.query_one(
-					"SELECT id, first_name, last_name, login, password, mail from student WHERE login=$1",
-					&[&login],
-				)
-				.await
-				.internal_server_error("SELECT error")?;
-
+		if let Some(row) = row {
 			let id: String = row.get(0);
-			let first_name: String = row.get(1);
-			let last_name: String = row.get(2);
-			let login: String = row.get(3);
-			let password: String = row.get(4);
-			let mail: String = row.get(5);
+			let hashed_password: String = row.get(1);
 
-			let student = Self {
-				id,
-				login,
-				password,
-				mail,
-				first_name,
-				last_name,
-			};
-
-			Ok(Some(student))
+			if verify_password(password, &hashed_password)? {
+				Ok(Some(Self::from_id(id).await?))
+			} else {
+				Ok(None)
+			}
 		} else {
 			Ok(None)
 		}
