@@ -2,8 +2,9 @@ use std::{fmt::Display, str::FromStr};
 
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum UserType {
 	Admin,

@@ -7,6 +7,20 @@ use crate::{
 
 use super::domain::{GetClassStudentsPayload, GetClassStudentsResponse};
 
+#[utoipa::path(
+	post,
+	path = "/courses/class/students",
+	request_body = GetClassStudentsPayload,
+	responses(
+		(status = 200, description = "List of students in class", body = GetClassStudentsResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Courses"
+)]
 #[post("/courses/class/students", data = "<get_class_students_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

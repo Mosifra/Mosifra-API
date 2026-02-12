@@ -9,6 +9,20 @@ use crate::{
 
 use super::domain::{GetInternshipsPayload, GetInternshipsResponse};
 
+#[utoipa::path(
+	post,
+	path = "/courses/internships",
+	request_body = GetInternshipsPayload,
+	responses(
+		(status = 200, description = "List of internships", body = GetInternshipsResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Courses"
+)]
 #[post("/courses/internships", data = "<get_internships_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

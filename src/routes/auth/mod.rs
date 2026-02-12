@@ -1,8 +1,8 @@
-mod domain;
-mod login;
-mod logout;
-mod session;
-mod twofa;
+pub mod domain;
+pub mod login;
+pub mod logout;
+pub mod session;
+pub mod twofa;
 
 pub use domain::CheckSessionResponse;
 pub use domain::DisconnectResponse;

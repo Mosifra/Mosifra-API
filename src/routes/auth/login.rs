@@ -14,6 +14,17 @@ use crate::{
 
 use super::domain::{LoginPayload, LoginResponse};
 
+#[utoipa::path(
+	post,
+	path = "/auth/login",
+	request_body = LoginPayload,
+	responses(
+		(status = 200, description = "Login successful", body = LoginResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	tag = "Auth"
+)]
 #[post("/auth/login", data = "<login_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

@@ -4,6 +4,18 @@ use crate::models::{auth::AuthGuard, users::University};
 
 use super::domain::GetUniversitiesResponse;
 
+#[utoipa::path(
+	get,
+	path = "/user/universities",
+	responses(
+		(status = 200, description = "List of universities", body = GetUniversitiesResponse),
+		(status = 401, description = "Unauthorized")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "User"
+)]
 #[get("/user/universities")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

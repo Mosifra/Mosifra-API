@@ -3,6 +3,7 @@
 use chrono::NaiveDate;
 use rocket::{fs::TempFile, http::Status};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::{
@@ -13,7 +14,7 @@ use crate::{
 	utils::crypto::generate_password,
 };
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateCompanyPayload {
 	pub login: String,
 	pub mail: String,
@@ -37,7 +38,7 @@ impl TryFrom<CreateCompanyPayload> for Company {
 	}
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CreateUserResponse {
 	pub success: bool,
 	pub password: Option<String>,
@@ -45,20 +46,21 @@ pub struct CreateUserResponse {
 
 // Student
 
-#[derive(Debug, FromForm)]
+#[derive(Debug, FromForm, ToSchema)]
 pub struct StudentCsvPayload<'r> {
+	#[schema(value_type = String, format = Binary)]
 	pub csv: TempFile<'r>,
 	pub class: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct StudentCsvResponse {
 	pub success: bool,
 }
 
 // University
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateUniversityPayload {
 	pub login: String,
 	pub name: String,
@@ -85,7 +87,7 @@ impl TryFrom<CreateUniversityPayload> for University {
 
 // Class
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateClassPayload {
 	pub name: String,
 	pub course_type: CourseType,
@@ -95,13 +97,13 @@ pub struct CreateClassPayload {
 	pub minimum_internship_length: i32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CreateClassResponse {
 	pub success: bool,
 }
 
 // Internship
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateIntershipPayload {
 	pub course_type: CourseType,
 	pub start_date: NaiveDate,
@@ -113,7 +115,7 @@ pub struct CreateIntershipPayload {
 	pub place: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CreateInternshipResponse {
 	pub success: bool,
 }

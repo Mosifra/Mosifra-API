@@ -7,6 +7,20 @@ use crate::{
 
 use super::domain::{CreateClassPayload, CreateClassResponse};
 
+#[utoipa::path(
+	post,
+	path = "/create/class",
+	request_body = CreateClassPayload,
+	responses(
+		(status = 200, description = "Class created successfully", body = CreateClassResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Create"
+)]
 #[post("/create/class", data = "<create_class_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

@@ -1,5 +1,6 @@
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
@@ -8,7 +9,7 @@ use crate::{
 	utils::crypto::{hash_password, verify_password},
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct University {
 	pub id: String,
 	pub login: String,

@@ -7,6 +7,20 @@ use crate::{
 
 use super::domain::{DeleteCompanyPayload, DeleteCompanyResponse};
 
+#[utoipa::path(
+	delete,
+	path = "/user/company",
+	request_body = DeleteCompanyPayload,
+	responses(
+		(status = 200, description = "Company deleted successfully", body = DeleteCompanyResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "User"
+)]
 #[delete("/user/company", data = "<delete_company_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

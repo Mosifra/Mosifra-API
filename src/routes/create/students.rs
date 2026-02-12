@@ -10,6 +10,20 @@ use crate::{
 
 use super::domain::{StudentCsvPayload, StudentCsvResponse};
 
+#[utoipa::path(
+	post,
+	path = "/create/students",
+	request_body = StudentCsvPayload,
+	responses(
+		(status = 200, description = "Students created successfully", body = StudentCsvResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Create"
+)]
 #[post("/create/students", data = "<student_csv_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

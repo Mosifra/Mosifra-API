@@ -5,6 +5,20 @@ use crate::models::{auth::AuthGuard, courses::Internship};
 
 use super::domain::{CreateInternshipResponse, CreateIntershipPayload};
 
+#[utoipa::path(
+	post,
+	path = "/create/internship",
+	request_body = CreateIntershipPayload,
+	responses(
+		(status = 200, description = "Internship created successfully", body = CreateInternshipResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Create"
+)]
 #[post("/create/internship", data = "<create_internship_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

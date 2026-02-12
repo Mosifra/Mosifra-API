@@ -4,6 +4,18 @@ use crate::models::auth::AuthGuard;
 
 use super::domain::CheckSessionResponse;
 
+#[utoipa::path(
+	get,
+	path = "/auth/check_session",
+	responses(
+		(status = 200, description = "Session is valid", body = CheckSessionResponse),
+		(status = 401, description = "Unauthorized")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Auth"
+)]
 #[get("/auth/check_session")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

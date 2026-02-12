@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 // Login
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct LoginPayload {
 	pub login: String,
 	pub password: String,
@@ -10,7 +11,7 @@ pub struct LoginPayload {
 	pub user_type: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct LoginResponse {
 	pub valid: bool,
 	pub transaction_id: Option<String>,
@@ -19,7 +20,7 @@ pub struct LoginResponse {
 
 // Twofa
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct TwofaPayload {
 	pub code: String,
 	pub transaction_id: String,
@@ -27,7 +28,7 @@ pub struct TwofaPayload {
 	pub remember_me: bool,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct TwofaResponse {
 	pub valid: bool,
 	pub jwt: Option<String>,
@@ -35,7 +36,7 @@ pub struct TwofaResponse {
 
 // CheckSession
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CheckSessionResponse {
 	pub valid: bool,
 	pub error: Option<String>,
@@ -43,7 +44,7 @@ pub struct CheckSessionResponse {
 
 // Disconnect
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct DisconnectResponse {
 	pub success: bool,
 }

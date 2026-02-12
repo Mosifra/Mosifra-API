@@ -4,6 +4,18 @@ use crate::{error_handling::StatusOptionHandling, models::auth::AuthGuard};
 
 use super::domain::GetInfoResponse;
 
+#[utoipa::path(
+	get,
+	path = "/user/student/info",
+	responses(
+		(status = 200, description = "Get student info", body = GetInfoResponse),
+		(status = 401, description = "Unauthorized")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "User"
+)]
 #[get("/user/student/info")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

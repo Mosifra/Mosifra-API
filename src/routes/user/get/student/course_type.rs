@@ -4,6 +4,18 @@ use crate::models::auth::AuthGuard;
 
 use super::domain::GetCourseTypeResponse;
 
+#[utoipa::path(
+	get,
+	path = "/user/student/course_type",
+	responses(
+		(status = 200, description = "Get student course type", body = GetCourseTypeResponse),
+		(status = 401, description = "Unauthorized")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "User"
+)]
 #[get("/user/student/course_type")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

@@ -4,6 +4,18 @@ use crate::models::{auth::AuthGuard, users::Company};
 
 use super::domain::GetCompaniesResponse;
 
+#[utoipa::path(
+	get,
+	path = "/user/companies",
+	responses(
+		(status = 200, description = "List of companies", body = GetCompaniesResponse),
+		(status = 401, description = "Unauthorized")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "User"
+)]
 #[get("/user/companies")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

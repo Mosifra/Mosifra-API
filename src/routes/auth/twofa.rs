@@ -13,6 +13,17 @@ use crate::{
 
 use super::domain::{TwofaPayload, TwofaResponse};
 
+#[utoipa::path(
+	post,
+	path = "/auth/2fa",
+	request_body = TwofaPayload,
+	responses(
+		(status = 200, description = "2FA successful", body = TwofaResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	tag = "Auth"
+)]
 #[post("/auth/twofa", data = "<twofa_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

@@ -7,6 +7,20 @@ use crate::{
 
 use super::domain::{DeleteClassPayload, DeleteClassResponse};
 
+#[utoipa::path(
+	delete,
+	path = "/courses/class",
+	request_body = DeleteClassPayload,
+	responses(
+		(status = 200, description = "Class deleted successfully", body = DeleteClassResponse),
+		(status = 401, description = "Unauthorized"),
+		(status = 500, description = "Internal Server Error")
+	),
+	security(
+		("api_key" = [])
+	),
+	tag = "Courses"
+)]
 #[delete("/courses/class", data = "<delete_class_payload>")]
 #[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::missing_errors_doc)]

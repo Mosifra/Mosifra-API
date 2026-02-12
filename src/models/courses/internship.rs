@@ -4,12 +4,13 @@ use rocket::http::Status;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
+use utoipa::ToSchema;
 
 use crate::{error_handling::StatusResultHandling, postgres::Db};
 
 use super::course_type::CourseType;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct Internship {
 	pub id: String,
 	pub course_type: CourseType,

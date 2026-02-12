@@ -1,9 +1,10 @@
 use rocket::http::Status;
 use serde::Serialize;
+use utoipa::ToSchema;
 
 use crate::models::users::Student;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct StudentDto {
 	pub mail: String,
 	pub first_name: String,
