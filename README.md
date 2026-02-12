@@ -48,4 +48,13 @@ cargo run
 - You can optionally launch `neovide` automatically inside the dev shell, as
   configured in the flake.
 
-Copyright © 2026 Yaniss Lasbordes. All Rights Reserved.
+Yanis Lasbordes. Tous droits réservés.
+
+Ce code source est une œuvre protégée par le droit d’auteur conformément au Code de la propriété intellectuelle français.
+
+Aucune utilisation, reproduction, modification, distribution ou exploitation de tout ou partie de ce code n’est autorisée sans l’autorisation écrite préalable des titulaires des droits.
+
+Toute violation pourra faire l’objet de poursuites conformément au droit français.
+
+Loi applicable :
+La présente licence est régie par le droit français. Tout litige relatif à ce code relève de la compétence exclusive des juridictions françaises.
