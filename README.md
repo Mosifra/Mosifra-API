@@ -47,3 +47,5 @@ cargo run
 - The flake also sets `RUST_SRC_PATH` for proper Rust tooling integration.
 - You can optionally launch `neovide` automatically inside the dev shell, as
   configured in the flake.
+
+Copyright © 2026 Yaniss Lasbordes. All Rights Reserved.
