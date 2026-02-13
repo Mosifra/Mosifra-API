@@ -2,6 +2,7 @@ use chrono::NaiveDate;
 use rocket::http::Status;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use utoipa::ToSchema;
 
 use crate::{
 	error_handling::{StatusOptionHandling, StatusResultHandling},
@@ -13,7 +14,7 @@ use crate::{
 
 use super::CourseType;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct Class {
 	pub id: String,
 	pub name: String,
