@@ -48,7 +48,7 @@ cargo run
 - You can optionally launch `neovide` automatically inside the dev shell, as
   configured in the flake.
 
-Yanis Lasbordes. Tous droits réservés.
+Yaniss Lasbordes. Tous droits réservés.
 
 Ce code source est une œuvre protégée par le droit d’auteur conformément au Code de la propriété intellectuelle français.
 
